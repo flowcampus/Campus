@@ -45,22 +45,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { RootState } from '../../store/store';
-import { fetchTeachersBySchool, createTeacher, updateTeacher } from '../../store/slices/teacherSlice';
+import { createTeacher, fetchTeachersBySchool, updateTeacher, Teacher } from '../../store/slices/teacherSlice';
 
-interface Teacher {
-  id: string;
-  employeeId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  qualification: string;
-  specialization: string;
-  subjects: string[];
-  dateOfJoining: string;
-  status: 'active' | 'inactive';
-  avatar?: string;
-}
+// Using Teacher interface from teacherSlice.ts
 
 const validationSchema = Yup.object({
   employeeId: Yup.string().required('Employee ID is required'),
@@ -136,9 +123,9 @@ const TeachersPage: React.FC = () => {
       phone: teacher.phone,
       qualification: teacher.qualification,
       specialization: teacher.specialization,
-      subjects: teacher.subjects,
-      dateOfJoining: teacher.dateOfJoining,
-      status: teacher.status,
+      subjects: [],
+      dateOfJoining: teacher.hireDate || new Date().toISOString().split('T')[0],
+      status: teacher.status as 'active',
     });
     setOpenDialog(true);
   };
@@ -349,6 +336,11 @@ const TeachersPage: React.FC = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
+                      <Typography variant="body2">
+                        {teacher.hireDate || 'N/A'}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
                       <Chip
                         label={teacher.status}
                         color={teacher.status === 'active' ? 'success' : 'default'}
@@ -376,7 +368,7 @@ const TeachersPage: React.FC = () => {
         {pagination && pagination.totalPages > 1 && (
           <Box display="flex" justifyContent="center" p={2}>
             <Pagination
-              count={pagination.totalPages}
+              count={pagination.pages}
               page={page}
               onChange={(_, value) => setPage(value)}
               color="primary"

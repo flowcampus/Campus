@@ -53,7 +53,7 @@ export const fetchAttendanceByClassAndDate = createAsyncThunk(
   'attendance/fetchByClassAndDate',
   async ({ classId, date }: { classId: string; date: string }, { rejectWithValue }) => {
     try {
-      const response = await attendanceAPI.mark(attendanceData);
+      const response = await attendanceAPI.markAttendance(classId, attendanceData);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch attendance');
@@ -65,8 +65,8 @@ export const fetchStudentAttendanceSummary = createAsyncThunk(
   'attendance/fetchStudentSummary',
   async ({ studentId, params = {} }: { studentId: string; params?: any }, { rejectWithValue }) => {
     try {
-      const response = await attendanceAPI.getStudentSummary(studentId, params);
-      return response.summary;
+      const response = await attendanceAPI.getByClassAndDate(classId, date);
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch attendance summary');
     }

@@ -60,8 +60,8 @@ export const fetchGradesByClass = createAsyncThunk(
   'grades/fetchByClass',
   async ({ classId, subjectId, params = {} }: { classId: string; subjectId: string; params?: any }, { rejectWithValue }) => {
     try {
-      const response = await gradesAPI.getByClass(classId, subjectId, params);
-      return response.grades;
+      const response = await gradesAPI.getByClass(classId, params);
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch class grades');
     }
@@ -73,7 +73,7 @@ export const updateGrade = createAsyncThunk(
   async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
     try {
       const response = await gradesAPI.update(id, data);
-      return response.grade;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to update grade');
     }
