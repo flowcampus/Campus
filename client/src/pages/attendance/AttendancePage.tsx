@@ -51,7 +51,7 @@ import {
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
-import { markAttendance, fetchAttendanceByClass } from '../../store/slices/attendanceSlice';
+import { markAttendance } from '../../store/slices/attendanceSlice';
 
 interface Student {
   id: string;
@@ -121,7 +121,7 @@ const AttendancePage: React.FC = () => {
         status,
       }));
 
-      await dispatch(markAttendance(attendanceRecords));
+      await dispatch(markAttendance({ classId: selectedClass, attendanceData: attendanceRecords }) as any);
       // Show success message
     } catch (error) {
       console.error('Error saving attendance:', error);
