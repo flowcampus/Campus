@@ -96,6 +96,11 @@ const LoginPage: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // Redirect to role selection on component mount
+  useEffect(() => {
+    navigate('/auth/role-selection');
+  }, [navigate]);
+
   useEffect(() => {
     // Clear errors when component mounts
     dispatch(clearError());

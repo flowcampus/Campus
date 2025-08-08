@@ -52,8 +52,14 @@ export const authAPI = {
   guestLogin: (schoolCode?: string) =>
     api.post('/auth/guest-login', { schoolCode }),
   
-  adminLogin: (credentials: { email: string; password: string; adminKey?: string }) =>
+  adminLogin: (credentials: { email: string; password: string; adminKey?: string; adminRole?: string }) =>
     api.post('/auth/admin-login', credentials),
+  
+  linkParentToChild: (linkData: { parentId: string; childCode: string }) =>
+    api.post('/auth/link-parent-child', linkData),
+  
+  generateMagicLink: (data: { email: string; adminRole: string }) =>
+    api.post('/auth/generate-magic-link', data),
   
   logout: () => api.post('/auth/logout'),
   

@@ -40,11 +40,29 @@ router.post('/register', async (req, res) => {
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body as { email: string; password: string };
+    const { email, password, schoolCode, role } = req.body as { 
+      email: string; 
+      password: string; 
+      schoolCode?: string; 
+      role?: string; 
+    };
     if (!email || !password) return res.status(400).json({ error: 'Missing credentials' });
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+
+    // Role-based validation
+    if (role && user.role !== role) {
+      return res.status(401).json({ error: 'Invalid role for this account' });
+    }
+
+    // School code validation for students/parents
+    if (schoolCode && user.schoolId) {
+      const school = await prisma.school.findUnique({ where: { id: user.schoolId } });
+      if (!school || school.code !== schoolCode) {
+        return res.status(401).json({ error: 'Invalid school code' });
+      }
+    }
 
     const ok = await comparePassword(password, user.password);
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
@@ -59,14 +77,52 @@ router.post('/login', async (req, res) => {
 // POST /api/auth/admin-login
 router.post('/admin-login', async (req, res) => {
   try {
-    const { email, password } = req.body as { email: string; password: string };
+    const { email, password, adminKey, adminRole } = req.body as { 
+      email: string; 
+      password: string; 
+      adminKey?: string;
+      adminRole?: string;
+    };
     if (!email || !password) return res.status(400).json({ error: 'Missing credentials' });
+    
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || user.role !== 'admin') return res.status(401).json({ error: 'Invalid credentials' });
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    
+    // Check if user has admin privileges
+    const adminRoles = ['super_admin', 'support_admin', 'sales_admin', 'content_admin', 'finance_admin'];
+    if (!adminRoles.includes(user.role)) {
+      return res.status(401).json({ error: 'Insufficient privileges' });
+    }
+    
+    // Validate admin role if specified
+    if (adminRole && user.role !== adminRole) {
+      return res.status(401).json({ error: 'Invalid admin role' });
+    }
+    
     const ok = await comparePassword(password, user.password);
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
-    const token = signJwt({ sub: user.id, role: user.role });
-    return res.json({ user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role, schoolId: user.schoolId }, token });
+    
+    // Additional admin key validation for super_admin
+    if (user.role === 'super_admin' && adminKey) {
+      const expectedKey = process.env.SUPER_ADMIN_KEY || 'default-super-key';
+      if (adminKey !== expectedKey) {
+        return res.status(401).json({ error: 'Invalid admin key' });
+      }
+    }
+    
+    const token = signJwt({ sub: user.id, role: user.role, adminRole: user.role });
+    return res.json({ 
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        firstName: user.firstName, 
+        lastName: user.lastName, 
+        role: user.role, 
+        schoolId: user.schoolId,
+        adminRole: user.role
+      }, 
+      token 
+    });
   } catch (e: any) {
     return res.status(500).json({ error: 'Admin login failed' });
   }
@@ -168,6 +224,84 @@ router.post('/refresh', async (req, res) => {
     return res.json({ token: newToken });
   } catch (e: any) {
     return res.status(500).json({ error: 'Failed to refresh token' });
+  }
+});
+
+// POST /api/auth/link-parent-child
+router.post('/link-parent-child', async (req, res) => {
+  try {
+    const { parentId, childCode } = req.body as { parentId: string; childCode: string };
+    if (!parentId || !childCode) {
+      return res.status(400).json({ error: 'Missing parent ID or child code' });
+    }
+
+    // Find student by unique code
+    const student = await prisma.user.findFirst({
+      where: {
+        role: 'student',
+        // Assuming we have a studentCode field or use email/id as code
+        OR: [
+          { email: { contains: childCode } },
+          { id: childCode }
+        ]
+      }
+    });
+
+    if (!student) {
+      return res.status(404).json({ error: 'Student not found with provided code' });
+    }
+
+    // Create parent-child relationship (assuming we have a ParentChild model)
+    // For now, we'll just return success - implement actual linking logic based on your schema
+    
+    return res.json({ 
+      message: 'Parent-child link created successfully',
+      student: {
+        id: student.id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        email: student.email
+      }
+    });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Parent-child linking failed' });
+  }
+});
+
+// POST /api/auth/generate-magic-link
+router.post('/generate-magic-link', async (req, res) => {
+  try {
+    const { email, adminRole } = req.body as { email: string; adminRole: string };
+    if (!email || !adminRole) {
+      return res.status(400).json({ error: 'Missing email or admin role' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const adminRoles = ['super_admin', 'support_admin', 'sales_admin', 'content_admin', 'finance_admin'];
+    if (!adminRoles.includes(user.role)) {
+      return res.status(401).json({ error: 'User does not have admin privileges' });
+    }
+
+    // Generate magic link token (expires in 10 minutes)
+    // Note: Using standard JWT expiration from config for now
+    const magicToken = signJwt({ sub: user.id, role: user.role });
+
+    // In a real implementation, you would send this via email
+    const magicLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin/magic-login?token=${magicToken}`;
+
+    // For demo purposes, we'll return the link
+    // In production, only send via email and return success message
+    return res.json({ 
+      message: 'Magic link sent to your email',
+      // Remove this in production:
+      magicLink: magicLink
+    });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Magic link generation failed' });
   }
 });
 

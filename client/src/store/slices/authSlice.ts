@@ -33,7 +33,7 @@ const initialState: AuthState = {
 // Async thunks
 export const login = createAsyncThunk(
   'auth/login',
-  async (credentials: { email: string; password: string; schoolCode?: string }, { rejectWithValue }) => {
+  async (credentials: { email: string; password: string; schoolCode?: string; role?: string }, { rejectWithValue }) => {
     try {
       const response = await authAPI.login(credentials);
       localStorage.setItem('campus_token', response.data.token);
@@ -78,9 +78,35 @@ export const guestLogin = createAsyncThunk(
   }
 );
 
+// New thunk for parent-child linking
+export const linkParentToChild = createAsyncThunk(
+  'auth/linkParentToChild',
+  async (linkData: { parentId: string; childCode: string }, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.linkParentToChild(linkData);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Parent-child linking failed');
+    }
+  }
+);
+
+// New thunk for magic link generation
+export const generateMagicLink = createAsyncThunk(
+  'auth/generateMagicLink',
+  async (data: { email: string; adminRole: string }, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.generateMagicLink(data);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Magic link generation failed');
+    }
+  }
+);
+
 export const adminLogin = createAsyncThunk(
   'auth/adminLogin',
-  async (credentials: { email: string; password: string; adminKey?: string }, { rejectWithValue }) => {
+  async (credentials: { email: string; password: string; adminKey?: string; adminRole?: string }, { rejectWithValue }) => {
     try {
       const response = await authAPI.adminLogin(credentials);
       localStorage.setItem('campus_token', response.data.token);

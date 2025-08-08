@@ -11,6 +11,15 @@ import AuthLayout from './components/layout/AuthLayout';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
+import RoleSelectionPage from './pages/auth/RoleSelectionPage';
+import StudentLoginPage from './pages/auth/StudentLoginPage';
+import ParentLoginPage from './pages/auth/ParentLoginPage';
+import SchoolLoginPage from './pages/auth/SchoolLoginPage';
+import GuestLoginPage from './pages/auth/GuestLoginPage';
+import AdminPortalPage from './pages/admin/AdminPortalPage';
+import StudentRegisterPage from './pages/auth/StudentRegisterPage';
+import ParentRegisterPage from './pages/auth/ParentRegisterPage';
+import SchoolStaffRegisterPage from './pages/auth/SchoolStaffRegisterPage';
 
 // Core pages (wrappers for full pages already created)
 import Dashboard from './pages/dashboard/Dashboard';
@@ -33,10 +42,21 @@ function App() {
       <Routes>
         {/* Public auth routes */}
         <Route element={<AuthLayout />}> 
+          <Route path="/auth/role-selection" element={<RoleSelectionPage />} />
           <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/login/student" element={<StudentLoginPage />} />
+          <Route path="/auth/login/parent" element={<ParentLoginPage />} />
+          <Route path="/auth/login/school" element={<SchoolLoginPage />} />
+          <Route path="/auth/login/guest" element={<GuestLoginPage />} />
           <Route path="/auth/register" element={<Register />} />
-          <Route path="/auth/forgot" element={<ForgotPassword />} />
+          <Route path="/auth/register/student" element={<StudentRegisterPage />} />
+          <Route path="/auth/register/parent" element={<ParentRegisterPage />} />
+          <Route path="/auth/register/school" element={<SchoolStaffRegisterPage />} />
+          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
         </Route>
+
+        {/* Admin Portal - Separate from main auth layout */}
+        <Route path="/admin/portal" element={<AdminPortalPage />} />
 
         {/* Protected app routes */}
         <Route
