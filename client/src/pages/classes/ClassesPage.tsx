@@ -49,7 +49,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { RootState } from '../../store/store';
-import { fetchClasses, createClass } from '../../store/slices/classSlice';
+import { fetchClassesBySchool, createClass } from '../../store/slices/classSlice';
 
 interface Class {
   id: string;
@@ -111,7 +111,7 @@ const ClassesPage: React.FC = () => {
           // Update class logic would go here
           console.log('Update class:', values);
         } else {
-          await dispatch(createClass(values));
+          await dispatch(createClass({ schoolId: user?.schoolId as string, classData: values }) as any);
         }
         resetForm();
         setOpenDialog(false);
@@ -124,7 +124,7 @@ const ClassesPage: React.FC = () => {
 
   useEffect(() => {
     if (user?.schoolId) {
-      dispatch(fetchClasses({ schoolId: user.schoolId }));
+      dispatch(fetchClassesBySchool({ schoolId: user.schoolId }) as any);
     }
   }, [dispatch, user?.schoolId]);
 
