@@ -272,7 +272,7 @@ const AppLayout: React.FC = () => {
             color="inherit"
           >
             <Avatar
-              src={user?.avatarUrl}
+              src={user?.avatar}
               alt={user?.firstName}
               sx={{ width: 32, height: 32 }}
             >
