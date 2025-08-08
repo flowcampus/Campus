@@ -110,7 +110,7 @@ router.post('/admin-login', async (req, res) => {
       }
     }
     
-    const token = signJwt({ sub: user.id, role: user.role, adminRole: user.role });
+    const token = signJwt({ sub: user.id, role: user.role });
     return res.json({ 
       user: { 
         id: user.id, 
