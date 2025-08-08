@@ -72,7 +72,7 @@ interface AttendanceRecord {
 
 const AttendancePage: React.FC = () => {
   const dispatch = useDispatch();
-  const { attendance, loading, error } = useSelector((state: RootState) => state.attendance);
+  const { loading, error } = useSelector((state: RootState) => state.attendance);
   const { classes } = useSelector((state: RootState) => state.classes);
   const { user } = useSelector((state: RootState) => state.auth);
 
