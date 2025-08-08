@@ -53,8 +53,8 @@ export const fetchAttendanceByClassAndDate = createAsyncThunk(
   'attendance/fetchByClassAndDate',
   async ({ classId, date }: { classId: string; date: string }, { rejectWithValue }) => {
     try {
-      const response = await attendanceAPI.getByClassAndDate(classId, date);
-      return response.attendance;
+      const response = await attendanceAPI.mark(attendanceData);
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch attendance');
     }

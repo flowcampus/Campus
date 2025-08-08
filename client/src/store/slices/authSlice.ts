@@ -36,8 +36,8 @@ export const login = createAsyncThunk(
   async (credentials: { email: string; password: string; schoolCode?: string }, { rejectWithValue }) => {
     try {
       const response = await authAPI.login(credentials);
-      localStorage.setItem('campus_token', response.token);
-      return response;
+      localStorage.setItem('campus_token', response.data.token);
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Login failed');
     }
@@ -57,8 +57,8 @@ export const register = createAsyncThunk(
   }, { rejectWithValue }) => {
     try {
       const response = await authAPI.register(userData);
-      localStorage.setItem('campus_token', response.token);
-      return response;
+      localStorage.setItem('campus_token', response.data.token);
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Registration failed');
     }
@@ -67,11 +67,11 @@ export const register = createAsyncThunk(
 
 export const guestLogin = createAsyncThunk(
   'auth/guestLogin',
-  async (schoolCode?: string, { rejectWithValue }) => {
+  async (schoolCode: string | undefined, { rejectWithValue }) => {
     try {
       const response = await authAPI.guestLogin(schoolCode);
-      localStorage.setItem('campus_token', response.token);
-      return response;
+      localStorage.setItem('campus_token', response.data.token);
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Guest login failed');
     }
@@ -83,8 +83,8 @@ export const adminLogin = createAsyncThunk(
   async (credentials: { email: string; password: string; adminKey?: string }, { rejectWithValue }) => {
     try {
       const response = await authAPI.adminLogin(credentials);
-      localStorage.setItem('campus_token', response.token);
-      return response;
+      localStorage.setItem('campus_token', response.data.token);
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Admin login failed');
     }
@@ -100,7 +100,7 @@ export const checkAuth = createAsyncThunk(
         throw new Error('No token found');
       }
       const response = await authAPI.getProfile();
-      return response;
+      return response.data;
     } catch (error: any) {
       localStorage.removeItem('campus_token');
       return rejectWithValue(error.response?.data?.error || 'Authentication failed');

@@ -38,7 +38,7 @@ export const fetchClassesBySchool = createAsyncThunk(
   async ({ schoolId, params = {} }: { schoolId: string; params?: any }, { rejectWithValue }) => {
     try {
       const response = await classesAPI.getBySchool(schoolId, params);
-      return response.classes;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch classes');
     }
@@ -50,7 +50,7 @@ export const fetchClassById = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await classesAPI.getById(id);
-      return response;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch class');
     }
@@ -62,7 +62,7 @@ export const createClass = createAsyncThunk(
   async ({ schoolId, classData }: { schoolId: string; classData: any }, { rejectWithValue }) => {
     try {
       const response = await classesAPI.create(schoolId, classData);
-      return response.class;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to create class');
     }

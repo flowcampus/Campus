@@ -39,7 +39,7 @@ export const sendMessage = createAsyncThunk(
   async (messageData: any, { rejectWithValue }) => {
     try {
       const response = await messagesAPI.send(messageData);
-      return response.data.message;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to send message');
     }
@@ -51,7 +51,7 @@ export const fetchMessages = createAsyncThunk(
   async ({ userId, params = {} }: { userId: string; params?: any }, { rejectWithValue }) => {
     try {
       const response = await messagesAPI.getByUser(userId, params);
-      return response;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch messages');
     }

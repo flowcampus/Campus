@@ -57,7 +57,7 @@ export const fetchSchools = createAsyncThunk(
   async (params: any = {}, { rejectWithValue }) => {
     try {
       const response = await schoolsAPI.getAll(params);
-      return response;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch schools');
     }
@@ -69,7 +69,7 @@ export const fetchSchoolById = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await schoolsAPI.getById(id);
-      return response.school;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch school');
     }
@@ -81,7 +81,7 @@ export const createSchool = createAsyncThunk(
   async (schoolData: any, { rejectWithValue }) => {
     try {
       const response = await schoolsAPI.create(schoolData);
-      return response.school;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to create school');
     }
@@ -93,7 +93,7 @@ export const updateSchool = createAsyncThunk(
   async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
     try {
       const response = await schoolsAPI.update(id, data);
-      return response.school;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to update school');
     }
@@ -105,7 +105,7 @@ export const updateSchoolSubscription = createAsyncThunk(
   async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
     try {
       const response = await schoolsAPI.updateSubscription(id, data);
-      return response.school;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to update subscription');
     }
@@ -117,7 +117,7 @@ export const fetchSchoolStats = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await schoolsAPI.getStats(id);
-      return { id, stats: response };
+      return { id, stats: response.data };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch school stats');
     }

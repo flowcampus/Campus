@@ -166,7 +166,7 @@ const GradesPage: React.FC = () => {
           // Update grade logic would go here
           console.log('Update grade:', gradeData);
         } else {
-          await dispatch(recordGrade(gradeData));
+          await dispatch(recordGrade(gradeData) as any);
         }
         resetForm();
         setOpenDialog(false);

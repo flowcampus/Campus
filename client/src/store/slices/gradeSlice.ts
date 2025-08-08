@@ -37,7 +37,7 @@ export const recordGrade = createAsyncThunk(
   async (gradeData: any, { rejectWithValue }) => {
     try {
       const response = await gradesAPI.record(gradeData);
-      return response.grade;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to record grade');
     }
@@ -49,7 +49,7 @@ export const fetchGradesByStudent = createAsyncThunk(
   async ({ studentId, params = {} }: { studentId: string; params?: any }, { rejectWithValue }) => {
     try {
       const response = await gradesAPI.getByStudent(studentId, params);
-      return response.grades;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch grades');
     }

@@ -47,7 +47,7 @@ import {
   Schedule as ScheduleIcon,
   Print as PrintIcon,
 } from '@mui/icons-material';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { RootState } from '../../store/store';
@@ -105,9 +105,9 @@ const paymentValidationSchema = Yup.object({
 });
 
 const FeesPage: React.FC = () => {
-  const dispatch = useDispatch();
-  const { structures, payments, loading, error } = useSelector((state: RootState) => state.fees);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const { structures, payments, loading, error } = useAppSelector((state: RootState) => state.fees);
+  const { user } = useAppSelector((state: RootState) => state.auth);
 
   // Keep existing variable name in UI
   const feeStructures = structures;
@@ -204,7 +204,7 @@ const FeesPage: React.FC = () => {
           // Update fee logic would go here
           console.log('Update fee:', values);
         } else {
-          await dispatch(createFeeStructure(values));
+          await dispatch(createFeeStructure({ schoolId: user?.schoolId as string, feeData: values }) as any);
         }
         resetForm();
         setOpenFeeDialog(false);
@@ -231,7 +231,7 @@ const FeesPage: React.FC = () => {
           ...values,
           date: new Date().toISOString().split('T')[0],
           status: 'completed',
-        }));
+        }) as any);
         resetForm();
         setOpenPaymentDialog(false);
       } catch (error) {

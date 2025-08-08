@@ -53,7 +53,7 @@ export const fetchTeachersBySchool = createAsyncThunk(
   async ({ schoolId, params = {} }: { schoolId: string; params?: any }, { rejectWithValue }) => {
     try {
       const response = await teachersAPI.getBySchool(schoolId, params);
-      return response;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch teachers');
     }
@@ -65,7 +65,7 @@ export const fetchTeacherById = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await teachersAPI.getById(id);
-      return response;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch teacher');
     }
@@ -77,7 +77,7 @@ export const createTeacher = createAsyncThunk(
   async ({ schoolId, teacherData }: { schoolId: string; teacherData: any }, { rejectWithValue }) => {
     try {
       const response = await teachersAPI.create(schoolId, teacherData);
-      return response.teacher;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to create teacher');
     }
@@ -89,7 +89,7 @@ export const updateTeacher = createAsyncThunk(
   async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
     try {
       const response = await teachersAPI.update(id, data);
-      return response.teacher;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to update teacher');
     }
@@ -127,7 +127,7 @@ const teacherSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(fetchTeacherById.fulfilled, (state, action) => {
-        state.currentTeacher = action.payload.teacher;
+        state.currentTeacher = action.payload;
       })
       .addCase(createTeacher.fulfilled, (state, action) => {
         state.teachers.unshift(action.payload);

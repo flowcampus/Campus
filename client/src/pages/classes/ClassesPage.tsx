@@ -50,24 +50,9 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { RootState } from '../../store/store';
 import { fetchClassesBySchool, createClass } from '../../store/slices/classSlice';
+import type { Class as ClassModel } from '../../store/slices/classSlice';
 
-interface Class {
-  id: string;
-  name: string;
-  level: string;
-  section: string;
-  capacity: number;
-  currentStrength: number;
-  classTeacher: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  subjects: string[];
-  room: string;
-  academicYear: string;
-  status: 'active' | 'inactive';
-}
+// Use the Class model from slice to avoid type drift
 
 const validationSchema = Yup.object({
   name: Yup.string().required('Class name is required'),
@@ -87,8 +72,8 @@ const ClassesPage: React.FC = () => {
 
   const [openDialog, setOpenDialog] = useState(false);
   const [openViewDialog, setOpenViewDialog] = useState(false);
-  const [editingClass, setEditingClass] = useState<Class | null>(null);
-  const [viewingClass, setViewingClass] = useState<Class | null>(null);
+  const [editingClass, setEditingClass] = useState<ClassModel | null>(null);
+  const [viewingClass, setViewingClass] = useState<ClassModel | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [levelFilter, setLevelFilter] = useState('all');
   const [page, setPage] = useState(1);
@@ -102,7 +87,7 @@ const ClassesPage: React.FC = () => {
       classTeacherId: '',
       room: '',
       academicYear: new Date().getFullYear().toString(),
-      status: 'active' as const,
+      status: 'active' as 'active' | 'inactive',
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
@@ -128,17 +113,17 @@ const ClassesPage: React.FC = () => {
     }
   }, [dispatch, user?.schoolId]);
 
-  const handleEdit = (classItem: Class) => {
+  const handleEdit = (classItem: ClassModel) => {
     setEditingClass(classItem);
     formik.setValues({
       name: classItem.name,
       level: classItem.level,
-      section: classItem.section,
+      section: classItem.section ?? '',
       capacity: classItem.capacity,
-      classTeacherId: classItem.classTeacher.id,
-      room: classItem.room,
-      academicYear: classItem.academicYear,
-      status: classItem.status,
+      classTeacherId: classItem.classTeacherId ?? '',
+      room: '',
+      academicYear: new Date().getFullYear().toString(),
+      status: 'active',
     });
     setOpenDialog(true);
   };
@@ -149,7 +134,7 @@ const ClassesPage: React.FC = () => {
     setOpenDialog(true);
   };
 
-  const handleView = (classItem: Class) => {
+  const handleView = (classItem: ClassModel) => {
     setViewingClass(classItem);
     setOpenViewDialog(true);
   };
@@ -164,8 +149,10 @@ const ClassesPage: React.FC = () => {
     const matchesSearch = 
       classItem.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       classItem.level.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      classItem.section.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      classItem.classTeacher.name.toLowerCase().includes(searchQuery.toLowerCase());
+      (classItem.section ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (((classItem.teacherFirstName ?? '') + ' ' + (classItem.teacherLastName ?? ''))
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()));
     
     const matchesLevel = levelFilter === 'all' || classItem.level === levelFilter;
     
@@ -173,8 +160,8 @@ const ClassesPage: React.FC = () => {
   });
 
   const levels = [...new Set(classes.map(c => c.level))];
-  const totalStudents = classes.reduce((sum, c) => sum + c.currentStrength, 0);
-  const averageCapacity = classes.length > 0 ? Math.round(classes.reduce((sum, c) => sum + c.capacity, 0) / classes.length) : 0;
+  const totalStudents = classes.reduce((sum, c) => sum + (c.studentCount ?? 0), 0);
+  const averageCapacity = classes.length > 0 ? Math.round(classes.reduce((sum, c) => sum + (c.capacity ?? 0), 0) / classes.length) : 0;
 
   return (
     <Box p={3}>
@@ -324,22 +311,20 @@ const ClassesPage: React.FC = () => {
                 <TableCell>Class</TableCell>
                 <TableCell>Class Teacher</TableCell>
                 <TableCell>Students</TableCell>
-                <TableCell>Room</TableCell>
-                <TableCell>Academic Year</TableCell>
-                <TableCell>Status</TableCell>
+                <TableCell>Term</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell colSpan={5} align="center">
                     <Typography>Loading...</Typography>
                   </TableCell>
                 </TableRow>
               ) : filteredClasses.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell colSpan={5} align="center">
                     <Typography color="text.secondary">
                       No classes found
                     </Typography>
@@ -361,39 +346,27 @@ const ClassesPage: React.FC = () => {
                     <TableCell>
                       <Box display="flex" alignItems="center">
                         <Avatar sx={{ mr: 2, width: 32, height: 32 }}>
-                          {classItem.classTeacher.name[0]}
+                          {(classItem.teacherFirstName ?? classItem.teacherLastName ?? '?').charAt(0)}
                         </Avatar>
                         <Typography variant="body2">
-                          {classItem.classTeacher.name}
+                          {`${classItem.teacherFirstName ?? ''} ${classItem.teacherLastName ?? ''}`.trim() || 'Unassigned'}
                         </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Box>
                         <Typography variant="body2">
-                          {classItem.currentStrength} / {classItem.capacity}
+                          {(classItem.studentCount ?? 0)} / {classItem.capacity}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {Math.round((classItem.currentStrength / classItem.capacity) * 100)}% full
+                          {classItem.capacity > 0 ? Math.round(((classItem.studentCount ?? 0) / classItem.capacity) * 100) : 0}% full
                         </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
-                        {classItem.room}
+                        {classItem.termName ?? '-'}
                       </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {classItem.academicYear}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={classItem.status}
-                        color={classItem.status === 'active' ? 'success' : 'default'}
-                        size="small"
-                      />
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title="View Details">
@@ -566,10 +539,7 @@ const ClassesPage: React.FC = () => {
                       Section: {viewingClass.section}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Room: {viewingClass.room}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Academic Year: {viewingClass.academicYear}
+                      Term: {viewingClass.termName ?? '-'}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -582,10 +552,10 @@ const ClassesPage: React.FC = () => {
                     </Typography>
                     <Box display="flex" alignItems="center">
                       <Avatar sx={{ mr: 2 }}>
-                        {viewingClass.classTeacher.name[0]}
+                        {(viewingClass.teacherFirstName ?? viewingClass.teacherLastName ?? '?').charAt(0)}
                       </Avatar>
                       <Typography variant="body1">
-                        {viewingClass.classTeacher.name}
+                        {`${viewingClass.teacherFirstName ?? ''} ${viewingClass.teacherLastName ?? ''}`.trim() || 'Unassigned'}
                       </Typography>
                     </Box>
                   </CardContent>
@@ -598,7 +568,7 @@ const ClassesPage: React.FC = () => {
                       Subjects
                     </Typography>
                     <Box display="flex" flexWrap="wrap" gap={1}>
-                      {viewingClass.subjects.map(subject => (
+                      {(viewingClass.subjects ?? []).map((subject: any) => (
                         <Chip key={subject} label={subject} size="small" />
                       ))}
                     </Box>

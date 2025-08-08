@@ -59,7 +59,7 @@ export const fetchStudentsBySchool = createAsyncThunk(
   async ({ schoolId, params = {} }: { schoolId: string; params?: any }, { rejectWithValue }) => {
     try {
       const response = await studentsAPI.getBySchool(schoolId, params);
-      return response;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch students');
     }
@@ -71,7 +71,7 @@ export const fetchStudentById = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const response = await studentsAPI.getById(id);
-      return response.student;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch student');
     }
@@ -83,7 +83,7 @@ export const createStudent = createAsyncThunk(
   async ({ schoolId, studentData }: { schoolId: string; studentData: any }, { rejectWithValue }) => {
     try {
       const response = await studentsAPI.create(schoolId, studentData);
-      return response.student;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to create student');
     }
@@ -95,7 +95,7 @@ export const updateStudent = createAsyncThunk(
   async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
     try {
       const response = await studentsAPI.update(id, data);
-      return response.student;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to update student');
     }

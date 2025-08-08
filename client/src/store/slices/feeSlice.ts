@@ -89,7 +89,7 @@ export const createFeeStructure = createAsyncThunk(
   async ({ schoolId, feeData }: { schoolId: string; feeData: any }, { rejectWithValue }) => {
     try {
       const response = await feesAPI.createStructure(schoolId, feeData);
-      return response.feeStructure;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to create fee structure');
     }
@@ -101,7 +101,7 @@ export const fetchFeeStructures = createAsyncThunk(
   async ({ schoolId, params = {} }: { schoolId: string; params?: any }, { rejectWithValue }) => {
     try {
       const response = await feesAPI.getStructures(schoolId, params);
-      return response.feeStructures;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch fee structures');
     }
@@ -113,7 +113,7 @@ export const recordFeePayment = createAsyncThunk(
   async (paymentData: any, { rejectWithValue }) => {
     try {
       const response = await feesAPI.recordPayment(paymentData);
-      return response.payment;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to record payment');
     }
@@ -125,7 +125,7 @@ export const fetchStudentFeeStatus = createAsyncThunk(
   async ({ studentId, params = {} }: { studentId: string; params?: any }, { rejectWithValue }) => {
     try {
       const response = await feesAPI.getStudentStatus(studentId, params);
-      return response.feeStatus;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch student fee status');
     }
@@ -137,7 +137,7 @@ export const fetchStudentPayments = createAsyncThunk(
   async ({ studentId, params = {} }: { studentId: string; params?: any }, { rejectWithValue }) => {
     try {
       const response = await feesAPI.getStudentPayments(studentId, params);
-      return response;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch student payments');
     }
@@ -149,7 +149,7 @@ export const fetchSchoolFeeSummary = createAsyncThunk(
   async ({ schoolId, params = {} }: { schoolId: string; params?: any }, { rejectWithValue }) => {
     try {
       const response = await feesAPI.getSchoolSummary(schoolId, params);
-      return response.summary;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch fee summary');
     }
