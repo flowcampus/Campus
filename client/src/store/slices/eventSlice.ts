@@ -37,7 +37,7 @@ export const createEvent = createAsyncThunk(
   async ({ schoolId, eventData }: { schoolId: string; eventData: any }, { rejectWithValue }) => {
     try {
       const response = await eventsAPI.create(schoolId, eventData);
-      return response.event;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to create event');
     }
@@ -49,7 +49,7 @@ export const fetchEventsBySchool = createAsyncThunk(
   async ({ schoolId, params = {} }: { schoolId: string; params?: any }, { rejectWithValue }) => {
     try {
       const response = await eventsAPI.getBySchool(schoolId, params);
-      return response.events;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch events');
     }

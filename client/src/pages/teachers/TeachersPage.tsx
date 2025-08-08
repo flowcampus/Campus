@@ -120,9 +120,9 @@ const TeachersPage: React.FC = () => {
       firstName: teacher.firstName,
       lastName: teacher.lastName,
       email: teacher.email,
-      phone: teacher.phone,
-      qualification: teacher.qualification,
-      specialization: teacher.specialization,
+      phone: teacher.phone || '',
+      qualification: teacher.qualification || '',
+      specialization: teacher.specialization || '',
       subjects: [],
       dateOfJoining: teacher.hireDate || new Date().toISOString().split('T')[0],
       status: teacher.status as 'active',
@@ -303,7 +303,7 @@ const TeachersPage: React.FC = () => {
                             {teacher.firstName} {teacher.lastName}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Joined: {new Date(teacher.dateOfJoining).toLocaleDateString()}
+                            Joined: {teacher.hireDate ? new Date(teacher.hireDate).toLocaleDateString() : 'N/A'}
                           </Typography>
                         </Box>
                       </Box>
@@ -365,7 +365,7 @@ const TeachersPage: React.FC = () => {
         </TableContainer>
 
         {/* Pagination */}
-        {pagination && pagination.totalPages > 1 && (
+        {pagination && pagination.pages > 1 && (
           <Box display="flex" justifyContent="center" p={2}>
             <Pagination
               count={pagination.pages}

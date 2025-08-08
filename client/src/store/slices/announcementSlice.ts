@@ -34,7 +34,7 @@ export const createAnnouncement = createAsyncThunk(
   async ({ schoolId, announcementData }: { schoolId: string; announcementData: any }, { rejectWithValue }) => {
     try {
       const response = await announcementsAPI.create(schoolId, announcementData);
-      return response.announcement;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to create announcement');
     }
@@ -46,7 +46,7 @@ export const fetchAnnouncementsBySchool = createAsyncThunk(
   async ({ schoolId, params = {} }: { schoolId: string; params?: any }, { rejectWithValue }) => {
     try {
       const response = await announcementsAPI.getBySchool(schoolId, params);
-      return response.announcements;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch announcements');
     }
