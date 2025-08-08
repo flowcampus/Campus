@@ -66,7 +66,6 @@ const LoginPage: React.FC = () => {
         dispatch(login({
           email: values.email,
           password: values.password,
-          rememberMe,
         }));
       }
     },
