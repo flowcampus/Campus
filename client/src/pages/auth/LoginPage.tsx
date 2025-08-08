@@ -83,7 +83,7 @@ const LoginPage: React.FC = () => {
   };
 
   const handleGuestLogin = () => {
-    dispatch(guestLogin());
+    dispatch(guestLogin(undefined));
   };
 
   const handleTogglePasswordVisibility = () => {

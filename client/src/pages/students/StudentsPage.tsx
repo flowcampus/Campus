@@ -291,7 +291,7 @@ const StudentsPage: React.FC = () => {
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Avatar
-                        src={student.avatarUrl}
+                        src={student.avatar || student.avatarUrl}
                         sx={{ mr: 2, bgcolor: 'primary.main' }}
                       >
                         {student.firstName.charAt(0)}
