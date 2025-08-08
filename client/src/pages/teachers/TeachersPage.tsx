@@ -45,7 +45,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { RootState } from '../../store/store';
-import { fetchTeachers, createTeacher, updateTeacher } from '../../store/slices/teacherSlice';
+import { fetchTeachersBySchool, createTeacher, updateTeacher } from '../../store/slices/teacherSlice';
 
 interface Teacher {
   id: string;
@@ -101,9 +101,9 @@ const TeachersPage: React.FC = () => {
     onSubmit: async (values, { resetForm }) => {
       try {
         if (editingTeacher) {
-          await dispatch(updateTeacher({ id: editingTeacher.id, ...values }));
+          await dispatch(updateTeacher({ id: editingTeacher.id, data: values }) as any);
         } else {
-          await dispatch(createTeacher(values));
+          await dispatch(createTeacher({ schoolId: (user?.schoolId as string) || '', teacherData: values }) as any);
         }
         resetForm();
         setOpenDialog(false);
@@ -116,13 +116,13 @@ const TeachersPage: React.FC = () => {
 
   useEffect(() => {
     if (user?.schoolId) {
-      dispatch(fetchTeachers({
-        schoolId: user.schoolId,
+      const params: any = {
         page,
         limit: 10,
-        search: searchQuery,
+        search: searchQuery || undefined,
         status: statusFilter === 'all' ? undefined : statusFilter,
-      }));
+      };
+      dispatch(fetchTeachersBySchool({ schoolId: user.schoolId, params }) as any);
     }
   }, [dispatch, user?.schoolId, page, searchQuery, statusFilter]);
 
