@@ -1,0 +1,199 @@
+Architecture 5
+
+Great — here’s a deeply analyzed and fully developed login flow & registration flow for My Campus school management app, based on my architecture and multi-role structure.
+
+A.✅ CAMPUS APP – COMPLETE LOGIN FLOW (Aligned with Registration)
+
+🔐 1. Login Entry Screen
+
+When users open the app and click “Login”, they are taken to a screen where they choose their role:
+	•	👨‍🎓 Student
+	•	👨‍👩‍👧 Parent
+	•	🌍 Guest
+	•	🏫 School (school-Admin (orfounder)/Teacher/Other Staff)
+
+Each role leads to a slightly different login process based on what data they must input and what access level they need.
+
+👨‍🎓 2. STUDENT LOGIN FLOW
+
+UI:
+	•	Email / Username / Phone Number
+	•	Password
+	•	👁 Show/Hide password toggle
+	•	🔄 Forgot password?
+	•	✅ Remember me (toggle)
+
+Logic:
+	•	Validate login credentials
+	•	Check school match (if registered under a school)
+	•	If first login → redirect to student onboarding (e.g., profile completion)
+	•	If returning → redirect to student dashboard
+
+👩‍👦 3. PARENT LOGIN FLOW
+
+UI:
+	•	Email / Phone
+	•	Password
+	•	Optional: Child’s School Code (if not already linked)
+
+Logic:
+	•	Validate login
+	•	If linked to student(s), load parent dashboard with:
+	•	Attendance
+	•	Fees
+	•	Progress
+	•	If not linked → prompt to link child via:
+	•	Unique student code
+	•	QR Code (for easy linking)
+	•	Or pending approval by school admin
+
+🌍 4. GUEST LOGIN FLOW
+
+Purpose:
+
+Let people (inspectors, future school clients, etc.) explore a demo mode.
+
+UI:
+	•	One-tap “Continue as Guest”
+	•	Optional school selector (to view demo data)
+
+Logic:
+	•	No password needed
+	•	Limited access to view:
+	•	Sample classes
+	•	Calendar
+	•	Events
+
+🏫 5. SCHOOL LOGIN FLOW
+
+Step 1 – Role Prompt:
+
+When user selects “School”, show:
+	•	🔘 Create a new school account
+	•	🔘 Login to existing school
+
+🆕 Option A: Create New School Account
+	•	Redirects to Registration Wizard (handled in earlier plan)
+
+🔐 Option B: Login to Existing School
+
+UI:
+	•	Dropdown or autocomplete input for school name or school email
+	•	User email (admin/teacher/staff)
+	•	Password
+	•	Login as:
+	•	🧑‍💼 School Admin
+	•	🧑‍🏫 Teacher
+	•	🧑‍🔧 Support Staff (IT, Accountant, etc.)
+
+Logic:
+	•	School is identified by domain/email/name
+	•	If user not yet linked, deny or request admin approval
+	•	If login valid:
+	•	Admins → Admin dashboard (full control)
+	•	Teachers → Classroom + Student data
+	•	Staff → Role-specific dashboards (e.g., accountant sees finance)
+
+🔐 6. SECURITY & MANAGEMENT
+
+Security Measures:
+	•	✅ Encrypted passwords (bcrypt or Argon2)
+	•	✅ Email/phone OTP for account recovery
+	•	✅ Device detection alerts
+	•	✅ Login history (per user)
+	•	✅ JWT or Session Tokens (auto-expiry with refresh)
+	•	✅ Role-Based Access Control (RBAC)
+	•	✅ Admins can suspend users or revoke login permissions
+🧠 7. UX Best Practices
+	•	🎨 Use clear and simple forms
+	•	🧭 Smooth transitions (wizard-style for new schools)
+	•	🛎 Smart error messages (e.g., “Wrong password” vs “Account not found”)
+	•	📲 Support biometric login for mobile (later phase)
+	•	📌 Save last used login role for quick access
+	•	🔄 Auto-refresh tokens behind the scenes
+
+B. 🔐 Role-Based Registration Entry (Step 1)
+
+✅ “Who are you?” Options:
+	•	🎓 Student
+	•	👨‍👩‍👧 Parent
+	•	🌐 Guest
+	•	🏫 School Staff / Admin
+
+This is implemented using role-based authentication wizards, which dynamically adjust the next steps.
+
+🧩 2. Dynamic Wizard Flow per Role (Step 2)
+
+Each option leads to a separate flow. Here’s how:
+
+🎓 Student Flow
+	•	Step 1: Full Name, Age, Gender
+	•	Step 2: Choose School (dropdown or search, or enter manually)
+	•	Step 3: Class / Section selection
+	•	Step 4: Create Account (Phone/Email + Password or OTP-based)
+	•	Step 5: Parent Link (optional): Send invite to parent’s phone/email
+
+✅ Auto-link to student School Dashboard after verification
+
+👨‍👩‍👧 Parent Flow
+	•	Step 1: Name, Gender, Relationship to Student
+	•	Step 2: Phone number or Email
+	•	Step 3: Link to child (via unique code, student name+school+class, or invite)
+	•	Step 4: Create Password / OTP
+	•	Step 5: Terms & Confirm
+
+✅ Parents will see only their children’s progress, messages, ... etc
+
+🌐 Guest Flow
+	•	Step 1: Name (optional)
+	•	Step 2: Select Area/School of Interest (search or browse)
+	•	Step 3: View limited public info (news, events, gallery)
+
+✅ No login required unless they want to interact
+✅ Guest session expires after 7 days
+
+🏫 School Flow (Admin/Staff/Teacher)
+
+➤ After choosing “School” role:
+
+	System asks:
+
+	•	✅ Do you want to:
+	•	➕ Create a New School
+	•	🔐 Log into an Existing School Account
+
+➕ Create a New School Account
+	•	Step 1: Enter school name, motto, region, address
+	•	Step 2: Add primary school email
+	•	Step 3: Phone number + OTP
+	•	Step 4: Set admin password
+	•	Step 5: Upload logo, select type (Nursery, Primary, Secondary, etc.)
+	•	Step 6: Security: Choose recovery questions + PIN
+	•	Step 7: Agreement to terms and policy
+	•	✅ Automatically land in the school-Admin dashboard
+
+🔐 Log into an Existing School
+	•	Step 1: Choose school by name or enter code/email
+	•	Step 2: Select role (Admin / Teacher / Staff)
+	•	Step 3: Enter School-issued email or ID
+	•	Step 4: Enter password / OTP
+	•	Step 5: Verify with security question or device
+
+✅ Access is role-limited (e.g., Teachers don’t see finances)
+
+🧠 Backend Role & Security Management
+	•	JWT + Role-based access control (RBAC)
+	•	School-specific tenant logic (multi-tenant database)
+	•	Logs & auditing for all login attempts
+	•	Data encryption for school data, separated per tenant
+	•	Admins can approve/revoke accounts in their school
+
+🌅 Visual Layout & UX
+
+Each flow uses a clean, friendly wizard design with:
+	•	Animated transitions
+	•	Progress indicators (Step 1 of 4, etc.)
+	•	Icons and illustrations
+	•	Voice guidance for low-literacy users
+	•	Back/Continue navigation
+	•	Haptic + Notification feedback

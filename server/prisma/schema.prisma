@@ -1,0 +1,76 @@
+// Prisma schema for Campus backend (Neon PostgreSQL)
+// Set DATABASE_URL in server/.env
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      String   // admin | principal | teacher | student | parent | guest
+  schoolId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school    School?  @relation(fields: [schoolId], references: [id])
+}
+
+model School {
+  id        String     @id @default(uuid())
+  name      String
+  code      String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  users     User[]
+  classes   ClassRoom[]
+  students  Student[]
+  teachers  Teacher[]
+}
+
+model ClassRoom {
+  id        String   @id @default(uuid())
+  name      String
+  capacity  Int      @default(40)
+  schoolId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school    School   @relation(fields: [schoolId], references: [id])
+  students  Student[]
+}
+
+model Student {
+  id         String    @id @default(uuid())
+  firstName  String
+  lastName   String
+  email      String?   @unique
+  schoolId   String
+  classId    String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  school     School    @relation(fields: [schoolId], references: [id])
+  classRoom  ClassRoom? @relation(fields: [classId], references: [id])
+}
+
+model Teacher {
+  id         String    @id @default(uuid())
+  firstName  String
+  lastName   String
+  email      String    @unique
+  schoolId   String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  school     School    @relation(fields: [schoolId], references: [id])
+}

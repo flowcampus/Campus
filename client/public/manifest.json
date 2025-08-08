@@ -1,0 +1,29 @@
+{
+  "short_name": "Campus",
+  "name": "Campus - School Management System",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#667eea",
+  "background_color": "#ffffff",
+  "description": "Complete school management system for administrators, teachers, students, and parents. Manage attendance, grades, fees, announcements, and more.",
+  "categories": ["education", "productivity", "business"],
+  "lang": "en",
+  "orientation": "portrait-primary"
+}

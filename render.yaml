@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: campus-server
+    env: node
+    plan: free
+    autoDeploy: true
+    rootDir: server
+    buildCommand: |
+      npm install
+      npm run prisma:generate
+      npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Set these in Render dashboard after linking repo (do not commit secrets)
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: SUPER_ADMIN_EMAIL
+        value: admin@campus.com
+      - key: SUPER_ADMIN_PASSWORD
+        value: ChangeMe_SuperAdmin_!2025
+    postDeployCommand: |
+      npx prisma migrate deploy
+
+  - type: static
+    name: campus-client
+    plan: free
+    autoDeploy: true
+    rootDir: client
+    buildCommand: |
+      npm install
+      npm run build
+    publishPath: build
+    headers:
+      - path: "/*"
+        name: "Cache-Control"
+        value: "public, max-age=0, must-revalidate"
+    # If your frontend needs to know the API URL, set REACT_APP_API_URL in Render dashboard
+    envVars:
+      - key: REACT_APP_API_URL
+        sync: false
