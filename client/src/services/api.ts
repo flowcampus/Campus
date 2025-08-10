@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 // Create axios instance
 const api = axios.create({
@@ -24,7 +24,7 @@ api.interceptors.request.use(
 
 // Response interceptor to handle errors
 api.interceptors.response.use(
-  (response) => response.data,
+  (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('campus_token');
@@ -34,9 +34,10 @@ api.interceptors.response.use(
   }
 );
 
-// Auth API
+// Auth API - Comprehensive with all new endpoints
 export const authAPI = {
-  login: (credentials: { email: string; password: string; schoolCode?: string }) =>
+  // Enhanced login with email/phone support
+  login: (credentials: { emailOrPhone: string; password: string; schoolCode?: string; role?: string }) =>
     api.post('/auth/login', credentials),
   
   register: (userData: {
@@ -49,29 +50,52 @@ export const authAPI = {
     schoolCode?: string;
   }) => api.post('/auth/register', userData),
   
-  guestLogin: (schoolCode?: string) =>
-    api.post('/auth/guest-login', { schoolCode }),
+  guestLogin: (schoolCode?: string) => {
+    console.log('🔄 API: Guest login request to /auth/guest-login with:', { schoolCode });
+    return api.post('/auth/guest-login', { schoolCode });
+  },
   
   adminLogin: (credentials: { email: string; password: string; adminKey?: string; adminRole?: string }) =>
     api.post('/auth/admin-login', credentials),
   
+  // OTP-based authentication
+  requestOtp: (data: { emailOrPhone: string; purpose?: 'login' | 'verify' | 'reset' }) =>
+    api.post('/auth/request-otp', data),
+  
+  verifyOtp: (data: { emailOrPhone: string; code: string; purpose?: 'login' | 'verify' | 'reset' }) =>
+    api.post('/auth/verify-otp', data),
+  
+  // Google OAuth
+  googleLogin: (data: { idToken: string; role?: string }) =>
+    api.post('/auth/google', data),
+  
+  // Enhanced password reset
+  requestPasswordReset: (data: { emailOrPhone: string }) =>
+    api.post('/auth/request-reset', data),
+  
+  resetPassword: (data: { token?: string; emailOrPhone?: string; code?: string; newPassword: string }) =>
+    api.post('/auth/reset-password', data),
+  
+  // Parent-child linking
   linkParentToChild: (linkData: { parentId: string; childCode: string }) =>
     api.post('/auth/link-parent-child', linkData),
   
+  // Magic link for admin
   generateMagicLink: (data: { email: string; adminRole: string }) =>
     api.post('/auth/generate-magic-link', data),
   
+  // Standard endpoints
   logout: () => api.post('/auth/logout'),
-  
   getProfile: () => api.get('/auth/profile'),
+  refreshToken: () => api.post('/auth/refresh'),
   
+  // Generic post/get methods for flexibility
+  post: (endpoint: string, data?: any) => api.post(endpoint, data),
+  get: (endpoint: string, params?: any) => api.get(endpoint, { params }),
+  
+  // Legacy endpoints for backward compatibility
   forgotPassword: (email: string) =>
     api.post('/auth/forgot-password', { email }),
-  
-  resetPassword: (data: { token: string; newPassword: string }) =>
-    api.post('/auth/reset-password', data),
-  
-  refreshToken: () => api.post('/auth/refresh'),
 };
 
 // Schools API
@@ -182,6 +206,15 @@ export const reportsAPI = {
   getClassPerformance: (classId: string, params?: any) => 
     api.get(`/reports/class/${classId}/performance`, { params }),
   getSchoolAnalytics: (schoolId: string) => api.get(`/reports/school/${schoolId}/analytics`),
+};
+
+// Dashboard API
+export const dashboardAPI = {
+  getStudentDashboard: () => api.get('/dashboard/student'),
+  getParentDashboard: () => api.get('/dashboard/parent'),
+  getGuestDashboard: () => api.get('/dashboard/guest'),
+  getSchoolDashboard: () => api.get('/dashboard/school'),
+  getAdminDashboard: () => api.get('/dashboard/admin'),
 };
 
 // Admin API

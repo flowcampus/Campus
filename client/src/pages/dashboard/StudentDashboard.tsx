@@ -351,11 +351,6 @@ const StudentDashboard: React.FC = () => {
                       primary={event.title}
                       secondary={event.date}
                     />
-                    <Chip 
-                      label={event.priority} 
-                      size="small" 
-                      color={event.priority === 'high' ? 'error' : 'default'}
-                    />
                   </ListItem>
                 ))}
               </List>

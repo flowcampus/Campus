@@ -5,18 +5,18 @@ import {
   Paper,
   Typography,
   useTheme,
-  useMediaQuery,
   IconButton,
 } from '@mui/material';
 import { School, Brightness4, Brightness7 } from '@mui/icons-material';
-import { Outlet } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { toggleTheme } from '../../store/slices/uiSlice';
-import { responsivePatterns, animations } from '../../styles/responsive';
 
-const AuthLayout: React.FC = () => {
+interface RoleSelectionLayoutProps {
+  children: React.ReactNode;
+}
+
+const RoleSelectionLayout: React.FC<RoleSelectionLayoutProps> = ({ children }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const dispatch = useAppDispatch();
   const { theme: currentTheme } = useAppSelector((state) => state.ui);
 
@@ -144,8 +144,8 @@ const AuthLayout: React.FC = () => {
             </Typography>
           </Box>
 
-          {/* Auth Forms */}
-          <Outlet />
+          {/* Content */}
+          {children}
 
           {/* Footer */}
           <Box sx={{ mt: 4, textAlign: 'center' }}>
@@ -162,4 +162,4 @@ const AuthLayout: React.FC = () => {
   );
 };
 
-export default AuthLayout;
+export default RoleSelectionLayout;

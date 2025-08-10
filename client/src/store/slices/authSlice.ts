@@ -4,6 +4,7 @@ import { authAPI } from '../../services/api';
 export interface User {
   id: string;
   email: string;
+  phone?: string;
   firstName: string;
   lastName: string;
   role: string;
@@ -12,6 +13,7 @@ export interface User {
   schoolName?: string;
   schoolCode?: string;
   avatar?: string;
+  adminRole?: string;
 }
 
 interface AuthState {
@@ -33,7 +35,7 @@ const initialState: AuthState = {
 // Async thunks
 export const login = createAsyncThunk(
   'auth/login',
-  async (credentials: { email: string; password: string; schoolCode?: string; role?: string }, { rejectWithValue }) => {
+  async (credentials: { emailOrPhone: string; password: string; schoolCode?: string; role?: string }, { rejectWithValue }) => {
     try {
       const response = await authAPI.login(credentials);
       localStorage.setItem('campus_token', response.data.token);
@@ -69,11 +71,23 @@ export const guestLogin = createAsyncThunk(
   'auth/guestLogin',
   async (schoolCode: string | undefined, { rejectWithValue }) => {
     try {
+      console.log('🔄 Guest login attempt with schoolCode:', schoolCode);
       const response = await authAPI.guestLogin(schoolCode);
+      console.log('✅ Guest login response:', response);
+      console.log('📦 Response data:', response.data);
+      
+      if (!response.data.token) {
+        console.error('❌ No token in response:', response.data);
+        return rejectWithValue('No authentication token received');
+      }
+      
       localStorage.setItem('campus_token', response.data.token);
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Guest login failed');
+      console.error('❌ Guest login error:', error);
+      console.error('❌ Error response:', error.response);
+      console.error('❌ Error data:', error.response?.data);
+      return rejectWithValue(error.response?.data?.error || error.message || 'Guest login failed');
     }
   }
 );
@@ -113,6 +127,73 @@ export const adminLogin = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Admin login failed');
+    }
+  }
+);
+
+// New OTP-based authentication
+export const requestOtp = createAsyncThunk(
+  'auth/requestOtp',
+  async (data: { emailOrPhone: string; purpose?: 'login' | 'verify' | 'reset' }, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.post('/auth/request-otp', data);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to send OTP');
+    }
+  }
+);
+
+export const verifyOtp = createAsyncThunk(
+  'auth/verifyOtp',
+  async (data: { emailOrPhone: string; code: string; purpose?: 'login' | 'verify' | 'reset' }, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.post('/auth/verify-otp', data);
+      if (data.purpose === 'login' && response.data.token) {
+        localStorage.setItem('campus_token', response.data.token);
+      }
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'OTP verification failed');
+    }
+  }
+);
+
+// Google OAuth login
+export const googleLogin = createAsyncThunk(
+  'auth/googleLogin',
+  async (data: { idToken: string; role?: string }, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.post('/auth/google', data);
+      localStorage.setItem('campus_token', response.data.token);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Google login failed');
+    }
+  }
+);
+
+// Enhanced password reset
+export const requestPasswordReset = createAsyncThunk(
+  'auth/requestPasswordReset',
+  async (data: { emailOrPhone: string }, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.post('/auth/request-reset', data);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to send reset instructions');
+    }
+  }
+);
+
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async (data: { token?: string; emailOrPhone?: string; code?: string; newPassword: string }, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.post('/auth/reset-password', data);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Password reset failed');
     }
   }
 );
@@ -160,17 +241,7 @@ export const forgotPassword = createAsyncThunk(
   }
 );
 
-export const resetPassword = createAsyncThunk(
-  'auth/resetPassword',
-  async (data: { token: string; newPassword: string }, { rejectWithValue }) => {
-    try {
-      const response = await authAPI.resetPassword(data);
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Password reset failed');
-    }
-  }
-);
+// Legacy resetPassword removed - using enhanced version above
 
 const authSlice = createSlice({
   name: 'auth',
@@ -178,6 +249,13 @@ const authSlice = createSlice({
   reducers: {
     clearError: (state) => {
       state.error = null;
+    },
+    setCredentials: (state, action: PayloadAction<{ user: User; token: string }>) => {
+      state.user = action.payload.user;
+      state.token = action.payload.token;
+      state.isAuthenticated = true;
+      state.error = null;
+      localStorage.setItem('campus_token', action.payload.token);
     },
     updateUser: (state, action: PayloadAction<Partial<User>>) => {
       if (state.user) {
@@ -323,5 +401,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, updateUser } = authSlice.actions;
+export const { clearError, setCredentials, updateUser } = authSlice.actions;
 export default authSlice.reducer;

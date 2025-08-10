@@ -4,7 +4,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
-import authRouter from './routes/auth';
+import authRoutes from './routes/auth';
+import adminRoutes from './routes/admin';
+import schoolRoutes from './routes/school';
+import dashboardRoutes from './routes/dashboard';
 import healthRouter from './routes/health';
 import prisma from './lib/prisma';
 import { hashPassword } from './utils/password';
@@ -25,12 +28,12 @@ app.get('/', (_req, res) => {
 });
 
 app.use('/api/health', healthRouter);
-app.use('/api/auth', authRouter);
-app.use('/api/students', studentsRouter);
-app.use('/api/teachers', teachersRouter);
-app.use('/api/classes', classesRouter);
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/school', schoolRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 async function bootstrap() {
   // Seed default School and Super Admin if missing

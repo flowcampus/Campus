@@ -64,7 +64,7 @@ const LoginPage: React.FC = () => {
         }));
       } else {
         dispatch(login({
-          email: values.email,
+          emailOrPhone: values.email,
           password: values.password,
         }));
       }
@@ -278,21 +278,34 @@ const LoginPage: React.FC = () => {
 
       {/* Register Link */}
       <Box sx={{ textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          Don't have an account?{' '}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
           <Link
             component={RouterLink}
-            to="/register"
+            to="/auth/forgot-password"
             variant="body2"
             sx={{ 
               textDecoration: 'none',
-              fontWeight: 600,
+              fontWeight: 500,
               color: 'primary.main',
+              '&:hover': { color: 'primary.dark' }
             }}
           >
-            Sign up here
+            Forgot password?
           </Link>
-        </Typography>
+          <Link
+            component={RouterLink}
+            to="/auth/register"
+            variant="body2"
+            sx={{ 
+              textDecoration: 'none',
+              fontWeight: 500,
+              color: 'primary.main',
+              '&:hover': { color: 'primary.dark' }
+            }}
+          >
+            Don't have an account? Sign up
+          </Link>
+        </Box>
       </Box>
 
       {/* Hidden Admin Portal Trigger */}

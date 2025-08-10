@@ -17,12 +17,21 @@ import ParentLoginPage from './pages/auth/ParentLoginPage';
 import SchoolLoginPage from './pages/auth/SchoolLoginPage';
 import GuestLoginPage from './pages/auth/GuestLoginPage';
 import AdminPortalPage from './pages/admin/AdminPortalPage';
+import MagicLogin from './pages/admin/MagicLogin';
 import StudentRegisterPage from './pages/auth/StudentRegisterPage';
 import ParentRegisterPage from './pages/auth/ParentRegisterPage';
 import SchoolStaffRegisterPage from './pages/auth/SchoolStaffRegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import OtpLoginPage from './pages/auth/OtpLoginPage';
 
 // Core pages (wrappers for full pages already created)
 import Dashboard from './pages/dashboard/Dashboard';
+import StudentDashboard from './pages/dashboard/StudentDashboard';
+import ParentDashboard from './pages/dashboard/ParentDashboard';
+import AdminDashboard from './pages/dashboard/AdminDashboard';
+import PrincipalDashboard from './pages/dashboard/PrincipalDashboard';
+import ResponsiveDashboard from './components/layout/ResponsiveDashboard';
 import Teachers from './pages/teachers/Teachers';
 import Classes from './pages/classes/Classes';
 import Attendance from './pages/attendance/Attendance';
@@ -33,6 +42,7 @@ import Subjects from './pages/subjects/Subjects';
 import Announcements from './pages/announcements/Announcements';
 import Events from './pages/events/Events';
 import Messages from './pages/messages/Messages';
+import Profile from './pages/profile/Profile';
 import Reports from './pages/reports/Reports';
 import Settings from './pages/settings/Settings';
 
@@ -52,13 +62,35 @@ function App() {
           <Route path="/auth/register/student" element={<StudentRegisterPage />} />
           <Route path="/auth/register/parent" element={<ParentRegisterPage />} />
           <Route path="/auth/register/school" element={<SchoolStaffRegisterPage />} />
+          <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/auth/otp-login" element={<OtpLoginPage />} />
           <Route path="/auth/forgot-password" element={<ForgotPassword />} />
         </Route>
 
         {/* Admin Portal - Separate from main auth layout */}
         <Route path="/admin/portal" element={<AdminPortalPage />} />
+        <Route path="/admin/magic-login" element={<MagicLogin />} />
 
         {/* Protected app routes */}
+        <Route element={<ProtectedRoute><ResponsiveDashboard /></ProtectedRoute>}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/student" element={<StudentDashboard />} />
+          <Route path="/dashboard/parent" element={<ParentDashboard />} />
+          <Route path="/dashboard/guest" element={<Dashboard />} />
+          <Route path="/dashboard/school" element={<PrincipalDashboard />} />
+          <Route path="/dashboard/admin" element={<AdminDashboard />} />
+          <Route path="/teachers" element={<Teachers />} />
+          <Route path="/classes" element={<Classes />} />
+          <Route path="/attendance" element={<Attendance />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/students" element={<Dashboard />} />
+          <Route path="/schools" element={<Dashboard />} />
+          <Route path="/assignments" element={<Dashboard />} />
+          <Route path="/grades" element={<Dashboard />} />
+          <Route path="/settings" element={<Dashboard />} />
+        </Route>
+
         <Route
           element={
             <ProtectedRoute>
@@ -66,13 +98,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/teachers" element={<Teachers />} />
-          <Route path="/classes" element={<Classes />} />
-          <Route path="/attendance" element={<Attendance />} />
-          <Route path="/grades" element={<Grades />} />
           <Route path="/fees" element={<Fees />} />
-          <Route path="/students" element={<Students />} />
           <Route path="/subjects" element={<Subjects />} />
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/events" element={<Events />} />

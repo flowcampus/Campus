@@ -85,7 +85,7 @@ const SchoolLoginPage: React.FC = () => {
     validationSchema: validationSchema,
     onSubmit: (values) => {
       dispatch(login({
-        email: values.email,
+        emailOrPhone: values.email,
         password: values.password,
         schoolCode: values.schoolCode,
         role: values.staffRole,

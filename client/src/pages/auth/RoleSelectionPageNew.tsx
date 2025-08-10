@@ -18,7 +18,7 @@ import {
   Public as GuestIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-
+import RoleSelectionLayout from '../../components/layout/RoleSelectionLayout';
 
 interface Role {
   id: string;
@@ -79,7 +79,7 @@ const RoleSelectionPage: React.FC = () => {
   };
 
   return (
-    <>
+    <RoleSelectionLayout>
       {/* Welcome Section */}
       <Box sx={{ textAlign: 'center', mb: { xs: 4, sm: 5, md: 6 } }}>
         <motion.div
@@ -88,13 +88,16 @@ const RoleSelectionPage: React.FC = () => {
           transition={{ duration: 0.6 }}
         >
           <Typography
-            variant="h4"
+            variant="h3"
             component="h1"
             gutterBottom
             sx={{
               fontWeight: 700,
-              fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem', lg: '3rem' },
-              color: theme.palette.text.primary,
+              fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem', lg: '3.5rem' },
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
               mb: { xs: 2, sm: 3 },
               lineHeight: 1.2,
             }}
@@ -103,13 +106,13 @@ const RoleSelectionPage: React.FC = () => {
           </Typography>
           
           <Typography
-            variant="body1"
+            variant="h6"
             color="text.secondary"
             sx={{
-              fontSize: { xs: '0.875rem', sm: '1rem', md: '1.125rem' },
+              fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
               fontWeight: 400,
               lineHeight: 1.6,
-              maxWidth: { xs: '100%', sm: '400px', md: '500px' },
+              maxWidth: { xs: '100%', sm: '500px', md: '600px', lg: '700px' },
               mx: 'auto',
               px: { xs: 2, sm: 3 },
             }}
@@ -290,7 +293,7 @@ const RoleSelectionPage: React.FC = () => {
           </Box>
         </motion.div>
       </Box>
-    </>
+    </RoleSelectionLayout>
   );
 };
 

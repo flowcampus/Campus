@@ -29,23 +29,34 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { guestLogin, clearError } from '../../store/slices/authSlice';
 
-// Mock demo schools
+// Mock demo schools - Cameroon focused
 const demoSchools = [
   {
-    id: 'demo1',
-    name: 'Campus Demo School',
-    location: 'Lagos, Nigeria',
-    type: 'Mixed (Nursery - Secondary)',
-    students: 1250,
+    id: 'CAMPUS_DEMO',
+    code: 'CAMPUS_DEMO',
+    name: 'École Campus Démonstration',
+    location: 'Douala, Cameroun',
+    type: 'Maternelle - Secondaire',
+    students: 850,
     image: '/images/demo-school-1.jpg',
   },
   {
-    id: 'demo2',
-    name: 'Excellence Academy',
-    location: 'Abuja, Nigeria',
-    type: 'Primary & Secondary',
-    students: 800,
+    id: 'EXCELLENCE_ACADEMY',
+    code: 'EXCELLENCE_ACADEMY',
+    name: 'Collège Excellence Yaoundé',
+    location: 'Yaoundé, Cameroun',
+    type: 'Primaire & Secondaire',
+    students: 650,
     image: '/images/demo-school-2.jpg',
+  },
+  {
+    id: 'BILINGUE_LYCEE',
+    code: 'BILINGUE_LYCEE',
+    name: 'Lycée Bilingue de Douala',
+    location: 'Douala, Cameroun',
+    type: 'Secondaire Bilingue',
+    students: 920,
+    image: '/images/demo-school-3.jpg',
   },
 ];
 
