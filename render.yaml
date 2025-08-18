@@ -10,7 +10,7 @@ services:
       npm run prisma:generate
       npm run build
     startCommand: npm run start
-    healthCheckPath: /
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
@@ -18,6 +18,10 @@ services:
         value: 10000
       # Set these in Render dashboard after linking repo (do not commit secrets)
       - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_PRIMARY
+        sync: false
+      - key: DATABASE_URL_SECONDARY
         sync: false
       - key: JWT_SECRET
         sync: false
