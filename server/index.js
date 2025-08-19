@@ -31,16 +31,23 @@ const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 const server = createServer(app);
+
+const PORT = process.env.PORT || 5000;
+
+// Resolve allowed CORS origins
+const corsOrigins = (process.env.CORS_ORIGINS
+  || (process.env.NODE_ENV === 'production'
+      ? 'https://campus-8o6c.onrender.com'
+      : 'http://localhost:3000'))
+  .split(',')
+  .map((o) => o.trim());
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://your-domain.com'] 
-      : ['http://localhost:3000'],
+    origin: corsOrigins,
     methods: ['GET', 'POST']
   }
 });
-
-const PORT = process.env.PORT || 5000;
 
 // Security middleware
 app.use(helmet({
@@ -64,15 +71,15 @@ const limiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Do not rate-limit health checks (prevents 429 on Render health probes)
+  skip: (req) => req.path === '/api/health',
 });
 
 app.use(limiter);
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-domain.com'] 
-    : ['http://localhost:3000'],
+  origin: corsOrigins,
   credentials: true
 }));
 
