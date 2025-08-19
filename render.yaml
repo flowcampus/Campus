@@ -5,10 +5,8 @@ services:
     plan: free
     autoDeploy: true
     rootDir: server
-    buildCommand: |
-      npm install
-      npm run prisma:generate
-      npm run build
+    # Use single-line build to avoid Render concatenation issues
+    buildCommand: npm ci && npm run prisma:generate && npm run build
     startCommand: npm run start
     healthCheckPath: /api/health
     envVars:
@@ -37,9 +35,7 @@ services:
     plan: free
     autoDeploy: true
     rootDir: client
-    buildCommand: |
-      npm install
-      npm run build
+    buildCommand: npm ci && npm run build
     publishPath: build
     headers:
       - path: "/*"
