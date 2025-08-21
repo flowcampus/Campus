@@ -9,35 +9,140 @@ interface EmailOptions {
 
 class EmailService {
   private transporter: nodemailer.Transporter;
+  private maxRetries = parseInt(process.env.SMTP_MAX_RETRIES || '3', 10);
+  private baseDelayMs = parseInt(process.env.SMTP_RETRY_DELAY_MS || '500', 10);
+  private lastVerify: { ok: boolean; classification?: string; message?: string } | null = null;
 
   constructor() {
+    const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+    const port = parseInt(process.env.SMTP_PORT || '587', 10);
+    const secure = process.env.SMTP_SECURE === 'true';
+    const ignoreTlsErrors = process.env.SMTP_IGNORE_TLS_ERRORS === 'true';
+
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
+      host,
+      port,
+      secure,
+      pool: true,
+      logger: process.env.SMTP_DEBUG === 'true',
+      debug: process.env.SMTP_DEBUG === 'true',
+      maxConnections: parseInt(process.env.SMTP_POOL_MAX_CONNECTIONS || '5', 10),
+      maxMessages: parseInt(process.env.SMTP_POOL_MAX_MESSAGES || '100', 10),
+      connectionTimeout: parseInt(process.env.SMTP_CONNECTION_TIMEOUT_MS || '10000', 10),
+      greetingTimeout: parseInt(process.env.SMTP_GREETING_TIMEOUT_MS || '10000', 10),
+      socketTimeout: parseInt(process.env.SMTP_SOCKET_TIMEOUT_MS || '20000', 10),
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-    });
+      tls: ignoreTlsErrors ? { rejectUnauthorized: false } : undefined,
+    } as any);
+
+    // Verify transporter on startup for visibility
+    this.transporter
+      .verify()
+      .then(() => {
+        // eslint-disable-next-line no-console
+        console.log('📧 SMTP transporter verified.', {
+          host,
+          port,
+          secure,
+          pool: true,
+        });
+        this.lastVerify = { ok: true };
+      })
+      .catch((err) => {
+        const classified = this.classifyError(err);
+        // eslint-disable-next-line no-console
+        console.error('❌ SMTP transporter verification failed:', {
+          host,
+          port,
+          secure,
+          user: process.env.SMTP_USER ? '[SET]' : '[MISSING]',
+          error: err?.message || err,
+          classification: classified,
+        });
+        this.lastVerify = { ok: false, classification: classified, message: err?.message || String(err) };
+      });
+  }
+
+  private classifyError(err: any) {
+    const message = (err?.message || '').toLowerCase();
+    const code = err?.code || '';
+    const responseCode = err?.responseCode;
+    if (code === 'EAUTH' || message.includes('invalid login')) return 'auth_error';
+    if (code === 'ECONNRESET' || code === 'EPIPE') return 'connection_reset';
+    if (code === 'ETIMEDOUT' || message.includes('timed out')) return 'timeout';
+    if (code === 'ENOTFOUND' || code === 'EAI_AGAIN') return 'dns_error';
+    if (message.includes('self signed certificate') || message.includes('certificate')) return 'tls_error';
+    if (responseCode && responseCode >= 500) return 'smtp_server_error';
+    return 'unknown_error';
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    try {
-      const mailOptions = {
-        from: process.env.SMTP_FROM || 'Campus <noreply@campus.com>',
-        to: options.to,
-        subject: options.subject,
-        text: options.text,
-        html: options.html,
-      };
+    const mailOptions = {
+      from: process.env.SMTP_FROM || 'Campus <noreply@campus.com>',
+      to: options.to,
+      subject: options.subject,
+      text: options.text,
+      html: options.html,
+    };
 
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('Email sent successfully:', result.messageId);
-      return true;
-    } catch (error) {
-      console.error('Email sending failed:', error);
-      return false;
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        const start = Date.now();
+        const result = await this.transporter.sendMail(mailOptions);
+        const duration = Date.now() - start;
+        // eslint-disable-next-line no-console
+        console.log('📨 Email sent', {
+          id: result.messageId,
+          to: options.to,
+          subject: options.subject,
+          response: result.response,
+          envelope: result.envelope,
+          durationMs: duration,
+          attempt,
+        });
+        return true;
+      } catch (err) {
+        const classification = this.classifyError(err);
+        const isTransient = ['connection_reset', 'timeout', 'dns_error', 'smtp_server_error'].includes(classification);
+        // eslint-disable-next-line no-console
+        console.error('❌ Email send attempt failed', {
+          attempt,
+          maxRetries: this.maxRetries,
+          to: options.to,
+          subject: options.subject,
+          error: (err as any)?.message || err,
+          code: (err as any)?.code,
+          responseCode: (err as any)?.responseCode,
+          classification,
+        });
+
+        if (attempt < this.maxRetries && isTransient) {
+          const delay = this.baseDelayMs * Math.pow(2, attempt - 1);
+          await new Promise((res) => setTimeout(res, delay));
+          continue;
+        }
+        return false;
+      }
+    }
+    return false;
+  }
+
+  // Lightweight check for health endpoint
+  async checkSmtp(): Promise<{ ok: boolean; classification?: string; message?: string }> {
+    try {
+      // If we recently verified, return cached result
+      if (this.lastVerify && this.lastVerify.ok) return this.lastVerify;
+      await this.transporter.verify();
+      this.lastVerify = { ok: true };
+      return this.lastVerify;
+    } catch (err: any) {
+      const classification = this.classifyError(err);
+      const result = { ok: false, classification, message: err?.message || String(err) };
+      this.lastVerify = result;
+      return result;
     }
   }
 

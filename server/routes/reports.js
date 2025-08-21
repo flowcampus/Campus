@@ -14,6 +14,25 @@ router.get('/student/:studentId/report-card', authenticateToken, async (req, res
       return res.status(400).json({ error: 'Term ID is required' });
     }
 
+    // Enforce tenant access: only super_admin or members of the student's school
+    if (req.user.role !== 'super_admin') {
+      const studentSchoolResult = await query(
+        'SELECT school_id FROM students WHERE id = $1',
+        [studentId]
+      );
+      if (studentSchoolResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+      const schoolId = studentSchoolResult.rows[0].school_id;
+      const accessResult = await query(
+        'SELECT 1 FROM school_users WHERE user_id = $1 AND school_id = $2 AND is_active = true',
+        [req.user.id, schoolId]
+      );
+      if (accessResult.rows.length === 0) {
+        return res.status(403).json({ error: 'No access to this student' });
+      }
+    }
+
     // Get student details
     const studentResult = await query(
       `SELECT s.*, u.first_name, u.last_name, u.email,
@@ -86,6 +105,22 @@ router.get('/class/:classId/performance', authenticateToken, requireRole(['teach
   try {
     const { classId } = req.params;
     const { termId, subjectId } = req.query;
+
+    // Enforce tenant access via class's school
+    if (req.user.role !== 'super_admin') {
+      const classResult = await query('SELECT school_id FROM classes WHERE id = $1', [classId]);
+      if (classResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Class not found' });
+      }
+      const schoolId = classResult.rows[0].school_id;
+      const accessResult = await query(
+        'SELECT 1 FROM school_users WHERE user_id = $1 AND school_id = $2 AND is_active = true',
+        [req.user.id, schoolId]
+      );
+      if (accessResult.rows.length === 0) {
+        return res.status(403).json({ error: 'No access to this class' });
+      }
+    }
 
     let whereClause = 'WHERE s.class_id = $1';
     const params = [classId];

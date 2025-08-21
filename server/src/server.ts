@@ -14,10 +14,29 @@ import { hashPassword } from './utils/password';
 import studentsRouter from './routes/students';
 import teachersRouter from './routes/teachers';
 import classesRouter from './routes/classes';
+import schoolsPublicRoutes from './routes/schools';
 
 const app = express();
 
-app.use(cors({ origin: true, credentials: true }));
+// Configure CORS from environment
+const allowedOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow same-origin or non-browser requests (no origin header)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.length === 0) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error(`CORS: Origin not allowed: ${origin}`));
+    },
+    credentials: true,
+    optionsSuccessStatus: 200,
+  })
+);
 app.use(helmet());
 app.use(express.json());
 app.use(morgan('dev'));
@@ -32,6 +51,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/school', schoolRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/schools', schoolsPublicRoutes);
 
 const PORT = process.env.PORT || 5001;
 

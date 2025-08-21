@@ -46,6 +46,23 @@ export const login = createAsyncThunk(
   }
 );
 
+// School staff login via /school/login
+export const schoolLogin = createAsyncThunk(
+  'auth/schoolLogin',
+  async (
+    data: { schoolIdentifier: string; role: 'school_admin' | 'teacher' | 'staff'; email: string; password: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await authAPI.schoolLogin(data);
+      localStorage.setItem('campus_token', response.data.token);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'School login failed');
+    }
+  }
+);
+
 export const register = createAsyncThunk(
   'auth/register',
   async (userData: {
@@ -56,6 +73,17 @@ export const register = createAsyncThunk(
     role: string;
     phone?: string;
     schoolCode?: string;
+    // Student fields
+    dateOfBirth?: string;
+    gender?: string;
+    country?: string;
+    language?: string;
+    level?: string;
+    className?: string;
+    parentEmail?: string;
+    parentPhone?: string;
+    // Parent fields
+    relationship?: string;
   }, { rejectWithValue }) => {
     try {
       const response = await authAPI.register(userData);
@@ -95,9 +123,9 @@ export const guestLogin = createAsyncThunk(
 // New thunk for parent-child linking
 export const linkParentToChild = createAsyncThunk(
   'auth/linkParentToChild',
-  async (linkData: { parentId: string; childCode: string }, { rejectWithValue }) => {
+  async (data: { code: string }, { rejectWithValue }) => {
     try {
-      const response = await authAPI.linkParentToChild(linkData);
+      const response = await authAPI.claimParentLink(data.code);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Parent-child linking failed');
@@ -278,6 +306,26 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.token = null;
+        state.error = action.payload as string;
+      })
+
+      // School Login
+      .addCase(schoolLogin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(schoolLogin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.error = null;
+      })
+      .addCase(schoolLogin.rejected, (state, action) => {
         state.loading = false;
         state.isAuthenticated = false;
         state.user = null;

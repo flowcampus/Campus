@@ -168,6 +168,29 @@ router.put('/:studentId', authenticateToken, requireRole(['super_admin', 'school
     const { studentId } = req.params;
     const updates = req.body;
 
+    // Enforce tenant access: only super_admin or members of the student's school can update
+    if (req.user.role !== 'super_admin') {
+      const studentSchoolResult = await query(
+        'SELECT school_id, user_id FROM students WHERE id = $1',
+        [studentId]
+      );
+
+      if (studentSchoolResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+
+      const schoolId = studentSchoolResult.rows[0].school_id;
+      const accessResult = await query(
+        'SELECT 1 FROM school_users WHERE user_id = $1 AND school_id = $2 AND is_active = true',
+        [req.user.id, schoolId]
+      );
+
+      // Allow the student to update their own limited profile only if needed; default to school membership check
+      if (accessResult.rows.length === 0) {
+        return res.status(403).json({ error: 'No access to this student\'s school' });
+      }
+    }
+
     const updateFields = [];
     const params = [];
     let paramCount = 0;
@@ -214,6 +237,28 @@ router.get('/:studentId/attendance', authenticateToken, async (req, res) => {
   try {
     const { studentId } = req.params;
     const { startDate, endDate } = req.query;
+
+    // Enforce tenant access
+    if (req.user.role !== 'super_admin') {
+      const studentSchoolResult = await query(
+        'SELECT school_id, user_id FROM students WHERE id = $1',
+        [studentId]
+      );
+
+      if (studentSchoolResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+
+      const schoolId = studentSchoolResult.rows[0].school_id;
+      const accessResult = await query(
+        'SELECT 1 FROM school_users WHERE user_id = $1 AND school_id = $2 AND is_active = true',
+        [req.user.id, schoolId]
+      );
+
+      if (accessResult.rows.length === 0 && req.user.id !== studentSchoolResult.rows[0].user_id) {
+        return res.status(403).json({ error: 'No access to this student' });
+      }
+    }
 
     let dateFilter = '';
     const params = [studentId];
@@ -271,6 +316,28 @@ router.get('/:studentId/grades', authenticateToken, async (req, res) => {
   try {
     const { studentId } = req.params;
     const { termId, subjectId } = req.query;
+
+    // Enforce tenant access
+    if (req.user.role !== 'super_admin') {
+      const studentSchoolResult = await query(
+        'SELECT school_id, user_id FROM students WHERE id = $1',
+        [studentId]
+      );
+
+      if (studentSchoolResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+
+      const schoolId = studentSchoolResult.rows[0].school_id;
+      const accessResult = await query(
+        'SELECT 1 FROM school_users WHERE user_id = $1 AND school_id = $2 AND is_active = true',
+        [req.user.id, schoolId]
+      );
+
+      if (accessResult.rows.length === 0 && req.user.id !== studentSchoolResult.rows[0].user_id) {
+        return res.status(403).json({ error: 'No access to this student' });
+      }
+    }
 
     let whereClause = 'WHERE g.student_id = $1';
     const params = [studentId];

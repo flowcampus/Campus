@@ -259,17 +259,27 @@ router.post('/request-reset', async (req, res) => {
       // Send email reset link
       const resetToken = await createPasswordResetToken(user.id);
       const emailSent = await emailService.sendPasswordResetEmail(user.email, resetToken);
-      
       if (!emailSent) {
-        console.error('Failed to send password reset email');
+        console.error('Password reset email send failed', {
+          userId: user.id,
+          channel: 'email',
+          to: user.email,
+        });
+      } else {
+        console.log('Password reset email queued', { userId: user.id, channel: 'email', to: user.email });
       }
     } else if (!isEmail && user.phone) {
       // Send SMS reset code
       const resetCode = await createOtpCode(user.id, 'phone', 'reset');
       const smsSent = await smsService.sendPasswordResetSms(user.phone, resetCode);
-      
       if (!smsSent) {
-        console.error('Failed to send password reset SMS');
+        console.error('Password reset SMS send failed', {
+          userId: user.id,
+          channel: 'phone',
+          to: user.phone,
+        });
+      } else {
+        console.log('Password reset SMS queued', { userId: user.id, channel: 'phone', to: user.phone });
       }
     }
 
@@ -464,12 +474,18 @@ router.post('/request-otp', async (req, res) => {
     if (isEmail && user.email) {
       const emailSent = await emailService.sendOtpEmail(user.email, otpCode, purpose);
       if (!emailSent) {
-        return res.status(500).json({ error: 'Failed to send OTP email' });
+        console.error('OTP email send failed', { userId: user.id, channel: 'email', to: user.email, purpose });
+        return res.status(502).json({ error: 'Unable to deliver OTP email. Please try again shortly.' });
+      } else {
+        console.log('OTP email queued', { userId: user.id, channel: 'email', to: user.email, purpose });
       }
     } else if (!isEmail && user.phone) {
       const smsSent = await smsService.sendOtpSms(user.phone, otpCode, purpose);
       if (!smsSent) {
-        return res.status(500).json({ error: 'Failed to send OTP SMS' });
+        console.error('OTP SMS send failed', { userId: user.id, channel: 'phone', to: user.phone, purpose });
+        return res.status(502).json({ error: 'Unable to deliver OTP SMS. Please try again shortly.' });
+      } else {
+        console.log('OTP SMS queued', { userId: user.id, channel: 'phone', to: user.phone, purpose });
       }
     } else {
       return res.status(400).json({ error: 'No valid email or phone number found' });

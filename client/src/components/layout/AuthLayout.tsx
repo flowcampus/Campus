@@ -8,7 +8,7 @@ import {
   useMediaQuery,
   IconButton,
 } from '@mui/material';
-import { School, Brightness4, Brightness7 } from '@mui/icons-material';
+import { School, Brightness4, Brightness7, Verified } from '@mui/icons-material';
 import { Outlet } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { toggleTheme } from '../../store/slices/uiSlice';
@@ -153,7 +153,7 @@ const AuthLayout: React.FC = () => {
               © 2024 Campus. All rights reserved.
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              Powered by FlowPlatform
+              Powered by FlowPlatform (Dr Ofe caleb) <Verified sx={{ fontSize: 14, color: 'primary.main', verticalAlign: 'middle' }} />
             </Typography>
           </Box>
         </Paper>

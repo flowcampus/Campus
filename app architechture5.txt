@@ -9,9 +9,9 @@ A.✅ CAMPUS APP – COMPLETE LOGIN FLOW (Aligned with Registration)
 When users open the app and click “Login”, they are taken to a screen where they choose their role:
 	•	👨‍🎓 Student
 	•	👨‍👩‍👧 Parent
+        •	🏫 School
 	•	🌍 Guest
-	•	🏫 School (school-Admin (orfounder)/Teacher/Other Staff)
-
+	 
 Each role leads to a slightly different login process based on what data they must input and what access level they need.
 
 👨‍🎓 2. STUDENT LOGIN FLOW
@@ -32,8 +32,11 @@ Logic:
 👩‍👦 3. PARENT LOGIN FLOW
 
 UI:
-	•	Email / Phone
+	•	Email / Username / Phone Number
 	•	Password
+	•	👁 Show/Hide password toggle
+	•	🔄 Forgot password?
+	•	✅ Remember me (toggle)
 	•	Optional: Child’s School Code (if not already linked)
 
 Logic:
@@ -49,20 +52,16 @@ Logic:
 
 🌍 4. GUEST LOGIN FLOW
 
-Purpose:
-
-Let people (inspectors, future school clients, etc.) explore a demo mode.
 
 UI:
+        •        info of continuing as guest and all
 	•	One-tap “Continue as Guest”
-	•	Optional school selector (to view demo data)
+	•	(like a very developed social media but of schools)
+
 
 Logic:
 	•	No password needed
 	•	Limited access to view:
-	•	Sample classes
-	•	Calendar
-	•	Events
 
 🏫 5. SCHOOL LOGIN FLOW
 
@@ -71,28 +70,26 @@ Step 1 – Role Prompt:
 When user selects “School”, show:
 	•	🔘 Create a new school account
 	•	🔘 Login to existing school
+ 
 
 🆕 Option A: Create New School Account
-	•	Redirects to Registration Wizard (handled in earlier plan)
+	•	Redirects to Registration Wizard (handled in plan dawn)
 
 🔐 Option B: Login to Existing School
 
 UI:
-	•	Dropdown or autocomplete input for school name or school email
-	•	User email (admin/teacher/staff)
+	•	Email / Username / Phone Number
 	•	Password
-	•	Login as:
-	•	🧑‍💼 School Admin
-	•	🧑‍🏫 Teacher
-	•	🧑‍🔧 Support Staff (IT, Accountant, etc.)
+	•	👁 Show/Hide password toggle
+	•	🔄 Forgot password?
+	•	✅ Remember me (toggle)
+
 
 Logic:
 	•	School is identified by domain/email/name
 	•	If user not yet linked, deny or request admin approval
 	•	If login valid:
-	•	Admins → Admin dashboard (full control)
-	•	Teachers → Classroom + Student data
-	•	Staff → Role-specific dashboards (e.g., accountant sees finance)
+	•	lands or link → dashboard according to how or role or field the account was registered 
 
 🔐 6. SECURITY & MANAGEMENT
 
@@ -122,16 +119,19 @@ B. 🔐 Role-Based Registration Entry (Step 1)
 
 This is implemented using role-based authentication wizards, which dynamically adjust the next steps.
 
-🧩 2. Dynamic Wizard Flow per Role (Step 2)
+🧩 2. Dynamic Wizard Flow per role(Step 2)
 
-Each option leads to a separate flow. Here’s how:
+Each option leads to a separate registration flow. Here’s how:
 
 🎓 Student Flow
-	•	Step 1: Full Name, Age, Gender
-	•	Step 2: Choose School (dropdown or search, or enter manually)
-	•	Step 3: Class / Section selection
-	•	Step 4: Create Account (Phone/Email + Password or OTP-based)
-	•	Step 5: Parent Link (optional): Send invite to parent’s phone/email
+	for student registration  wizart there have to be a ;
+    select country and select language0 
+  then equally adding ;select level ( according to how the country level it as per thier individual languages used e.i, e.g in cameroon e.g in english we have NURSORY,PRIMARY,SECONDARY,UNIVERSITY) then class (according to how the specific country names them according to thier level and as per thier individual laguages of education ).
+        Full Name, Age, Gender
+	Choose School (dropdown or search, or enter manually)
+	Create Account (Phone/Email + Password or OTP-based)
+	Parent Link (optional): Send invite to parent’s phone/email
+note(this should be well analyse and steped and well developed)
 
 ✅ Auto-link to student School Dashboard after verification
 
@@ -144,12 +144,9 @@ Each option leads to a separate flow. Here’s how:
 
 ✅ Parents will see only their children’s progress, messages, ... etc
 
-🌐 Guest Flow
-	•	Step 1: Name (optional)
-	•	Step 2: Select Area/School of Interest (search or browse)
-	•	Step 3: View limited public info (news, events, gallery)
-
-✅ No login required unless they want to interact
+🌐 Guest Flow: when already in guest
+	
+✅ No  required unless they want to interact
 ✅ Guest session expires after 7 days
 
 🏫 School Flow (Admin/Staff/Teacher)
@@ -159,34 +156,44 @@ Each option leads to a separate flow. Here’s how:
 	System asks:
 
 	•	✅ Do you want to:
-	•	➕ Create a New School
-	•	🔐 Log into an Existing School Account
+        •	🔐 Log into an Existing School Account(already handled in up plan)
+	•	➕ Create a New School account
+	
 
-➕ Create a New School Account
-	•	Step 1: Enter school name, motto, region, address
-	•	Step 2: Add primary school email
-	•	Step 3: Phone number + OTP
-	•	Step 4: Set admin password
-	•	Step 5: Upload logo, select type (Nursery, Primary, Secondary, etc.)
-	•	Step 6: Security: Choose recovery questions + PIN
-	•	Step 7: Agreement to terms and policy
-	•	✅ Automatically land in the school-Admin dashboard
+➕ Create a New School Account:
+                this will display two buttons:
+           first  🔘 START staff/teacher/... REGISTRATION:
+ 
+         •	Step 1:Full Name, Age, Gender
+                       select country and select language(s) (as per country official educational language(s))
+         •	Step 2:then we have: Choose School(s)(dropdown or search) (according to registered schools that are in his or her country only)-choose position or staff roll as per school (as per country's system of education e.i e.g in Cameroon (a search; principal, vise principal, secretory, teacher, busser, discipline master,.. etc. in short all role possible of all levels an according to its country all imbedded accordingly then asking this)
+         •	Step 3: Create Account (Phone/Email + Password or OTP-based),Terms & Confirm
+      
+                    ✅(note: when the user press the Create account, request is being send to school(s) owner(s) admin and school busser or person in school in charged for that, with the person registering infos and all his or her infor excluding password, the request is send for any to review, approve or reject registration. when send at the same time the person is notified request under review, and imidietly goes to thier position respective dashboard or display (✅ Access is role-limited (e.g., Teachers don’t see finances)) while waiting for any school approval to see  his school(s) stuffs as respective management and more features)    
+             
+        second   🔘 START SCHOOL REGISTRATION:
 
-🔐 Log into an Existing School
-	•	Step 1: Choose school by name or enter code/email
-	•	Step 2: Select role (Admin / Teacher / Staff)
-	•	Step 3: Enter School-issued email or ID
-	•	Step 4: Enter password / OTP
-	•	Step 5: Verify with security question or device
+	 •	Step 1: Enter you school name, motto,address
+                select country and select school language(s) (as per country official educational language(s))
+         •	Step 2: select level ( according to how the country level it as per their individual languages used e.i, e.g in Cameroon e.g in Englishe we have NURSORY,PRIMARY,SECONDARY,UNIVERSITY)
+                   Upload school logo image (this is size limited)
+         •	Step 3: school Email/Phone + Password 
+                Security: Choose recovery questions + PIN
+         •	Step 4: school owner(s) admin email(s)/+ password(s) + OTP
+	 	 Agreement to terms and policy 
 
-✅ Access is role-limited (e.g., Teachers don’t see finances)
+	•	✅ when all done and ok Automatically land in the school-Admin dashboard
+      
+
+
 
 🧠 Backend Role & Security Management
 	•	JWT + Role-based access control (RBAC)
 	•	School-specific tenant logic (multi-tenant database)
 	•	Logs & auditing for all login attempts
 	•	Data encryption for school data, separated per tenant
-	•	Admins can approve/revoke accounts in their school
+	•	school(s) owner(s) admin and school busser or person in school incharge for that can approve/revoke   
+        •       ... etc
 
 🌅 Visual Layout & UX
 
@@ -194,6 +201,5 @@ Each flow uses a clean, friendly wizard design with:
 	•	Animated transitions
 	•	Progress indicators (Step 1 of 4, etc.)
 	•	Icons and illustrations
-	•	Voice guidance for low-literacy users
 	•	Back/Continue navigation
 	•	Haptic + Notification feedback

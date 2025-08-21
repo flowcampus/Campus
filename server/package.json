@@ -3,9 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "node index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "node -e \"console.log('no server build step')\"",
-    "start": "node index.js",
+    "start": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "db:schema": "node scripts/apply-schema.js",
+    "test:smoke": "node scripts/e2e-smoke.js",
+    "test:auth": "node scripts/e2e-auth.js",
+    "test:admin": "node scripts/e2e-admin.js",
+    "set:dbhost": "node scripts/set-db-host-override.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy"

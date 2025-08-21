@@ -33,7 +33,7 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { login, clearError } from '../../store/slices/authSlice';
+import { schoolLogin, clearError } from '../../store/slices/authSlice';
 
 const validationSchema = yup.object({
   email: yup
@@ -84,12 +84,19 @@ const SchoolLoginPage: React.FC = () => {
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
-      dispatch(login({
-        emailOrPhone: values.email,
-        password: values.password,
-        schoolCode: values.schoolCode,
-        role: values.staffRole,
-      }));
+      const roleMap: Record<string, 'school_admin' | 'teacher' | 'staff'> = {
+        school_admin: 'school_admin',
+        teacher: 'teacher',
+        support_staff: 'staff',
+      };
+      dispatch(
+        schoolLogin({
+          schoolIdentifier: values.schoolCode,
+          role: roleMap[values.staffRole] || 'staff',
+          email: values.email,
+          password: values.password,
+        })
+      );
     },
   });
 

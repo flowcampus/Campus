@@ -129,6 +129,11 @@ const GuestLoginPage: React.FC = () => {
           />
         </Box>
 
+        {/* Limited-access banner */}
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          You are accessing a demo with limited features. Actions are read-only and may reset periodically.
+        </Alert>
+
         {/* Error Alert */}
         {error && (
           <Alert severity="error" sx={{ mb: 3, maxWidth: 600, mx: 'auto' }} onClose={() => dispatch(clearError())}>

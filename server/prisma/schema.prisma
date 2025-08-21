@@ -1,5 +1,5 @@
-// Prisma schema for Campus backend (Neon PostgreSQL)
-// Set DATABASE_URL in server/.env
+// Prisma schema for Campus backend (Supabase PostgreSQL)
+// Set DATABASE_URL in server/.env (Supabase connection string)
 
 generator client {
   provider = "prisma-client-js"

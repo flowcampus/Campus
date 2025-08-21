@@ -12,6 +12,11 @@ const authenticateToken = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Allow demo guest tokens without DB lookup
+    if (decoded && decoded.userId === 'guest' && decoded.role === 'guest') {
+      req.user = { id: 'guest', role: 'guest' };
+      return next();
+    }
     
     // Get user details from database
     const userResult = await query(

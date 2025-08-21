@@ -171,6 +171,28 @@ router.put('/:teacherId', authenticateToken, requireRole(['super_admin', 'school
     const { teacherId } = req.params;
     const updates = req.body;
 
+    // Enforce tenant access: only super_admin or members of the teacher's school can update
+    if (req.user.role !== 'super_admin') {
+      const teacherSchoolResult = await query(
+        'SELECT school_id FROM teachers WHERE id = $1',
+        [teacherId]
+      );
+
+      if (teacherSchoolResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Teacher not found' });
+      }
+
+      const schoolId = teacherSchoolResult.rows[0].school_id;
+      const accessResult = await query(
+        'SELECT 1 FROM school_users WHERE user_id = $1 AND school_id = $2 AND is_active = true',
+        [req.user.id, schoolId]
+      );
+
+      if (accessResult.rows.length === 0) {
+        return res.status(403).json({ error: 'No access to this teacher\'s school' });
+      }
+    }
+
     const updateFields = [];
     const params = [];
     let paramCount = 0;

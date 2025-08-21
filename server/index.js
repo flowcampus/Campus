@@ -1,4 +1,6 @@
 const express = require('express');
+// Prefer IPv4 in DNS resolution (helps prevent EAI_AGAIN/ENOTFOUND on Windows)
+try { require('dns').setDefaultResultOrder && require('dns').setDefaultResultOrder('ipv4first'); } catch (_) {}
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -28,6 +30,10 @@ const messageRoutes = require('./routes/messages');
 const reportRoutes = require('./routes/reports');
 const adminRoutes = require('./routes/admin');
 const notificationRoutes = require('./routes/notifications');
+const dashboardRoutes = require('./routes/dashboard');
+const schoolAuthRoutes = require('./routes/schoolAuth');
+const guestRoutes = require('./routes/guest');
+const parentLinkRoutes = require('./routes/parentLinks');
 
 const app = express();
 const server = createServer(app);
@@ -131,6 +137,10 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/school', schoolAuthRoutes);
+app.use('/api/guest', guestRoutes);
+app.use('/api/parent-links', parentLinkRoutes);
 
 // Socket.IO for real-time features
 io.on('connection', (socket) => {
@@ -183,6 +193,16 @@ app.use((error, req, res, next) => {
       ? 'Internal server error' 
       : error.message,
     ...(process.env.NODE_ENV !== 'production' && { stack: error.stack })
+  });
+});
+
+// Root route - helpful index
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Campus App Server',
+    status: 'running',
+    health: '/api/health',
+    docs: 'See README or API routes under /api/*',
   });
 });
 

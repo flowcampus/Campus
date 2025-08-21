@@ -21,6 +21,7 @@ import MagicLogin from './pages/admin/MagicLogin';
 import StudentRegisterPage from './pages/auth/StudentRegisterPage';
 import ParentRegisterPage from './pages/auth/ParentRegisterPage';
 import SchoolStaffRegisterPage from './pages/auth/SchoolStaffRegisterPage';
+import SchoolCreationWizard from './pages/auth/SchoolCreationWizard';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import OtpLoginPage from './pages/auth/OtpLoginPage';
@@ -32,6 +33,7 @@ import ParentDashboard from './pages/dashboard/ParentDashboard';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import PrincipalDashboard from './pages/dashboard/PrincipalDashboard';
 import ResponsiveDashboard from './components/layout/ResponsiveDashboard';
+import GuestDashboard from './pages/dashboard/GuestDashboard';
 import Teachers from './pages/teachers/Teachers';
 import Classes from './pages/classes/Classes';
 import Attendance from './pages/attendance/Attendance';
@@ -62,10 +64,10 @@ function App() {
           <Route path="/auth/register/student" element={<StudentRegisterPage />} />
           <Route path="/auth/register/parent" element={<ParentRegisterPage />} />
           <Route path="/auth/register/school" element={<SchoolStaffRegisterPage />} />
+          <Route path="/auth/register/school/create" element={<SchoolCreationWizard />} />
           <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
           <Route path="/auth/otp-login" element={<OtpLoginPage />} />
-          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
         </Route>
 
         {/* Admin Portal - Separate from main auth layout */}
@@ -77,7 +79,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/student" element={<StudentDashboard />} />
           <Route path="/dashboard/parent" element={<ParentDashboard />} />
-          <Route path="/dashboard/guest" element={<Dashboard />} />
+          <Route path="/dashboard/guest" element={<GuestDashboard />} />
           <Route path="/dashboard/school" element={<PrincipalDashboard />} />
           <Route path="/dashboard/admin" element={<AdminDashboard />} />
           <Route path="/teachers" element={<Teachers />} />

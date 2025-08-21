@@ -26,12 +26,13 @@ import {
   Link as LinkIcon,
   Visibility,
   VisibilityOff,
+  QrCode2,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { register, clearError } from '../../store/slices/authSlice';
+import { register, clearError, linkParentToChild } from '../../store/slices/authSlice';
 
 const steps = ['Personal Info', 'Account Setup', 'Link Child'];
 
@@ -68,6 +69,9 @@ const ParentRegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [linkLoading, setLinkLoading] = useState(false);
+  const [linkSuccess, setLinkSuccess] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   const formik = useFormik({
     initialValues: {
@@ -99,9 +103,28 @@ const ParentRegisterPage: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      // If parent provided a child linking code, attempt to link immediately
+      if (formik.values.childCode) {
+        dispatch(linkParentToChild({ code: formik.values.childCode }));
+      }
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
+
+  const handleClaimCodeNow = async () => {
+    setLinkSuccess(null);
+    setLinkError(null);
+    if (!formik.values.childCode) return;
+    try {
+      setLinkLoading(true);
+      await dispatch(linkParentToChild({ code: formik.values.childCode })).unwrap?.();
+      setLinkSuccess('Child linked successfully. You can also link additional children from your dashboard later.');
+    } catch (e: any) {
+      setLinkError(e || 'Failed to link child. Please verify the code and try again.');
+    } finally {
+      setLinkLoading(false);
+    }
+  };
 
   const renderStepContent = (step: number) => {
     switch (step) {
@@ -268,21 +291,54 @@ const ParentRegisterPage: React.FC = () => {
       case 2:
         return (
           <Box>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
               <LinkIcon /> Link your child (optional)
             </Typography>
+            <Alert severity="info" sx={{ mb: 3 }}>
+              Enter the student code provided by the school or scan a QR code from the student profile later.
+            </Alert>
 
             <TextField
               fullWidth
               name="childCode"
               label="Student Code (optional)"
               value={formik.values.childCode}
-              onChange={formik.handleChange}
+              onChange={(e) => { setLinkSuccess(null); setLinkError(null); formik.handleChange(e); }}
               onBlur={formik.handleBlur}
               error={formik.touched.childCode && Boolean(formik.errors.childCode)}
               helperText={formik.touched.childCode && formik.errors.childCode}
-              sx={{ mb: 3 }}
+              sx={{ mb: 2 }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton aria-label="scan qr (coming soon)" edge="end" disabled>
+                      <QrCode2 />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
+
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <Button
+                variant="outlined"
+                onClick={handleClaimCodeNow}
+                disabled={!formik.values.childCode || linkLoading}
+              >
+                {linkLoading ? 'Linking…' : 'Claim Code Now'}
+              </Button>
+            </Box>
+
+            {linkSuccess && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                {linkSuccess}
+              </Alert>
+            )}
+            {linkError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {linkError}
+              </Alert>
+            )}
 
             <TextField
               fullWidth

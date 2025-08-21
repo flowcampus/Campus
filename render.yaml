@@ -14,12 +14,12 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: CORS_ORIGINS
+        value: https://campus1.onrender.com
+      - key: FRONTEND_URL
+        value: https://campus1.onrender.com
       # Set these in Render dashboard after linking repo (do not commit secrets)
       - key: DATABASE_URL
-        sync: false
-      - key: DATABASE_URL_PRIMARY
-        sync: false
-      - key: DATABASE_URL_SECONDARY
         sync: false
       - key: JWT_SECRET
         sync: false
@@ -44,4 +44,4 @@ services:
     # If your frontend needs to know the API URL, set REACT_APP_API_URL in Render dashboard
     envVars:
       - key: REACT_APP_API_URL
-        sync: false
+        value: https://campus-server.onrender.com/api

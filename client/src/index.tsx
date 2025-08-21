@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
@@ -10,38 +10,43 @@ import App from './App';
 import { store } from './store/store';
 import { checkAuth } from './store/slices/authSlice';
 import './i18n/i18n';
+import { useAppSelector } from './store/hooks';
 
-// Create theme
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-      light: '#42a5f5',
-      dark: '#1565c0',
+// Theme wrapper that reacts to Redux ui.theme (light/dark)
+const ThemedApp: React.FC = () => {
+  const mode = useAppSelector((state) => state.ui.theme);
+
+  const theme = useMemo(() => createTheme({
+    palette: {
+      mode,
+      primary: {
+        main: '#1976d2',
+        light: '#42a5f5',
+        dark: '#1565c0',
+      },
+      secondary: {
+        main: '#dc004e',
+      },
+      background: {
+        default: mode === 'dark' ? '#121212' : '#f5f5f5',
+      },
     },
-    secondary: {
-      main: '#dc004e',
+    typography: {
+      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+      h4: { fontWeight: 600 },
+      h5: { fontWeight: 600 },
+      h6: { fontWeight: 600 },
     },
-    background: {
-      default: '#f5f5f5',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h4: {
-      fontWeight: 600,
-    },
-    h5: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 600,
-    },
-  },
-  shape: {
-    borderRadius: 8,
-  },
-});
+    shape: { borderRadius: 8 },
+  }), [mode]);
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <App />
+    </ThemeProvider>
+  );
+};
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -66,10 +71,7 @@ root.render(
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <App />
-          </ThemeProvider>
+          <ThemedApp />
         </BrowserRouter>
       </QueryClientProvider>
     </Provider>

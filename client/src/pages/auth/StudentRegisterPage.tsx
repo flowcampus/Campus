@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   TextField,
@@ -34,19 +34,22 @@ import * as yup from 'yup';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { register, clearError } from '../../store/slices/authSlice';
 
-const steps = ['Personal Info', 'School Selection', 'Account Setup', 'Parent Link'];
+const steps = ['Personal Info', 'School & Locale', 'Account Setup', 'Parent Link'];
 
 const validationSchemas = [
-  // Step 1: Personal Info
+  // Step 1: Personal Info + Locale
   yup.object({
     firstName: yup.string().required('First name is required'),
     lastName: yup.string().required('Last name is required'),
     dateOfBirth: yup.date().required('Date of birth is required'),
     gender: yup.string().required('Gender is required'),
+    country: yup.string().required('Country is required'),
+    language: yup.string().required('Language is required'),
   }),
-  // Step 2: School Selection
+  // Step 2: School & Class Selection
   yup.object({
     schoolCode: yup.string().required('School selection is required'),
+    level: yup.string().required('Level is required'),
     className: yup.string().required('Class selection is required'),
   }),
   // Step 3: Account Setup
@@ -69,6 +72,44 @@ const mockSchools = [
   { code: 'ROYAL001', name: 'Royal Academy', classes: ['Grade 1', 'Grade 2', 'Grade 3'] },
 ];
 
+// Country -> Languages mapping (expandable). Focus Cameroon demo per requirements.
+const countryLanguages: Record<string, string[]> = {
+  Cameroon: ['English', 'French'],
+  Nigeria: ['English'],
+  USA: ['English'],
+};
+
+// Level options per (country, language)
+const levelOptions: Record<string, Record<string, string[]>> = {
+  Cameroon: {
+    English: ['Nursery', 'Primary', 'Secondary', 'High School'],
+    French: ["Maternelle", 'Primaire', 'Secondaire', 'Lycée'],
+  },
+  Nigeria: {
+    English: ['Primary', 'Junior Secondary', 'Senior Secondary'],
+  },
+  USA: {
+    English: ['Elementary', 'Middle School', 'High School'],
+  },
+};
+
+// Example classes per level (simplified; can be fetched from backend later)
+const classesByLevel: Record<string, string[]> = {
+  Nursery: ['Nursery 1', 'Nursery 2', 'Nursery 3'],
+  Primary: ['Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6'],
+  Secondary: ['Form 1', 'Form 2', 'Form 3', 'Form 4', 'Form 5'],
+  'High School': ['Lower 6th', 'Upper 6th'],
+  Maternelle: ['Petite Section', 'Moyenne Section', 'Grande Section'],
+  Primaire: ['CM1', 'CM2', 'CM3', 'CM4', 'CM5', 'CM6'],
+  Secondaire: ['6ème', '5ème', '4ème', '3ème', '2nde'],
+  Lycée: ['1ère', 'Terminale'],
+  'Junior Secondary': ['JSS1', 'JSS2', 'JSS3'],
+  'Senior Secondary': ['SS1', 'SS2', 'SS3'],
+  Elementary: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'],
+  'Middle School': ['Grade 6', 'Grade 7', 'Grade 8'],
+  'High School (US)': ['Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'],
+};
+
 const StudentRegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -86,7 +127,10 @@ const StudentRegisterPage: React.FC = () => {
       lastName: '',
       dateOfBirth: '',
       gender: '',
+      country: 'Cameroon',
+      language: '',
       schoolCode: '',
+      level: '',
       className: '',
       email: '',
       password: '',
@@ -117,8 +161,17 @@ const StudentRegisterPage: React.FC = () => {
   const handleSchoolSelect = (school: any) => {
     setSelectedSchool(school);
     formik.setFieldValue('schoolCode', school?.code || '');
+    formik.setFieldValue('level', '');
     formik.setFieldValue('className', ''); // Reset class selection
   };
+
+  // Derived options
+  const availableLanguages = useMemo(() => countryLanguages[formik.values.country] || [], [formik.values.country]);
+  const availableLevels = useMemo(() => {
+    const byCountry = levelOptions[formik.values.country] || {};
+    return byCountry[formik.values.language] || [];
+  }, [formik.values.country, formik.values.language]);
+  const availableClasses = useMemo(() => classesByLevel[formik.values.level] || [], [formik.values.level]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -187,6 +240,53 @@ const StudentRegisterPage: React.FC = () => {
               <MenuItem value="female">Female</MenuItem>
               <MenuItem value="other">Other</MenuItem>
             </TextField>
+
+            {/* Locale Selection */}
+            <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+              <TextField
+                fullWidth
+                select
+                name="country"
+                label="Country"
+                value={formik.values.country}
+                onChange={(e) => {
+                  formik.handleChange(e);
+                  // reset dependent fields
+                  formik.setFieldValue('language', '');
+                  formik.setFieldValue('level', '');
+                  formik.setFieldValue('className', '');
+                }}
+                onBlur={formik.handleBlur}
+                error={formik.touched.country && Boolean(formik.errors.country)}
+                helperText={formik.touched.country && formik.errors.country}
+              >
+                {Object.keys(countryLanguages).map((c) => (
+                  <MenuItem key={c} value={c}>{c}</MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                fullWidth
+                select
+                name="language"
+                label="Language of instruction"
+                value={formik.values.language}
+                onChange={(e) => {
+                  formik.handleChange(e);
+                  // reset dependent fields
+                  formik.setFieldValue('level', '');
+                  formik.setFieldValue('className', '');
+                }}
+                onBlur={formik.handleBlur}
+                error={formik.touched.language && Boolean(formik.errors.language)}
+                helperText={formik.touched.language && formik.errors.language}
+                disabled={!availableLanguages.length}
+              >
+                {availableLanguages.map((lang) => (
+                  <MenuItem key={lang} value={lang}>{lang}</MenuItem>
+                ))}
+              </TextField>
+            </Box>
           </Box>
         );
 
@@ -194,7 +294,7 @@ const StudentRegisterPage: React.FC = () => {
         return (
           <Box>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-              Choose your school and class
+              Choose your school, level and class
             </Typography>
             
             <Autocomplete
@@ -222,23 +322,46 @@ const StudentRegisterPage: React.FC = () => {
             />
 
             {selectedSchool && (
-              <TextField
-                fullWidth
-                select
-                name="className"
-                label="Select Your Class"
-                value={formik.values.className}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.className && Boolean(formik.errors.className)}
-                helperText={formik.touched.className && formik.errors.className}
-              >
-                {selectedSchool.classes.map((className: string) => (
-                  <MenuItem key={className} value={className}>
-                    {className}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <>
+                <TextField
+                  fullWidth
+                  select
+                  name="level"
+                  label="Select Level"
+                  value={formik.values.level}
+                  onChange={(e) => {
+                    formik.handleChange(e);
+                    formik.setFieldValue('className', '');
+                  }}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.level && Boolean(formik.errors.level)}
+                  helperText={formik.touched.level && formik.errors.level}
+                  sx={{ mb: 3 }}
+                >
+                  {availableLevels.map((lvl) => (
+                    <MenuItem key={lvl} value={lvl}>{lvl}</MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
+                  fullWidth
+                  select
+                  name="className"
+                  label="Select Your Class"
+                  value={formik.values.className}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.className && Boolean(formik.errors.className)}
+                  helperText={formik.touched.className && formik.errors.className}
+                  disabled={!formik.values.level}
+                >
+                  {availableClasses.map((className: string) => (
+                    <MenuItem key={className} value={className}>
+                      {className}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </>
             )}
           </Box>
         );

@@ -1,11 +1,17 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+// Log once for diagnostics (helpful during env/CORS setup)
+if (typeof window !== 'undefined') {
+  // eslint-disable-next-line no-console
+  console.log('🌐 Campus API Base URL:', API_BASE_URL);
+}
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
+  withCredentials: true,
 });
 
 // Request interceptor to add auth token
@@ -54,6 +60,15 @@ export const authAPI = {
     console.log('🔄 API: Guest login request to /auth/guest-login with:', { schoolCode });
     return api.post('/auth/guest-login', { schoolCode });
   },
+
+  // School-specific login (school identifier + role)
+  schoolLogin: (data: { schoolIdentifier: string; role: 'school_admin' | 'teacher' | 'staff'; email: string; password: string }) =>
+    api.post('/auth/login', {
+      emailOrPhone: data.email,
+      password: data.password,
+      schoolCode: data.schoolIdentifier,
+      role: data.role,
+    }),
   
   adminLogin: (credentials: { email: string; password: string; adminKey?: string; adminRole?: string }) =>
     api.post('/auth/admin-login', credentials),
@@ -77,8 +92,10 @@ export const authAPI = {
     api.post('/auth/reset-password', data),
   
   // Parent-child linking
-  linkParentToChild: (linkData: { parentId: string; childCode: string }) =>
-    api.post('/auth/link-parent-child', linkData),
+  requestParentLink: (studentId: string) => api.post('/parent-links/request', { studentId }),
+  claimParentLink: (code: string) => api.post('/parent-links/claim', { code }),
+  approveParentLink: (linkId: string) => api.post('/parent-links/approve', { linkId }),
+  getMyChildren: () => api.get('/parent-links/my'),
   
   // Magic link for admin
   generateMagicLink: (data: { email: string; adminRole: string }) =>
