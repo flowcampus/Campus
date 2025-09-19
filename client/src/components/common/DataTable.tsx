@@ -32,7 +32,7 @@ export interface Column {
   label: string;
   minWidth?: number;
   align?: 'left' | 'center' | 'right';
-  format?: (value: any, row: any) => React.ReactNode;
+  format?: (value: unknown, row: Record<string, unknown>) => React.ReactNode;
   sortable?: boolean;
   filterable?: boolean;
 }
@@ -40,15 +40,15 @@ export interface Column {
 export interface Action {
   label: string;
   icon?: React.ReactNode;
-  onClick: (row: any) => void;
+  onClick: (row: Record<string, unknown>) => void;
   color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
-  disabled?: (row: any) => boolean;
-  hidden?: (row: any) => boolean;
+  disabled?: (row: Record<string, unknown>) => boolean;
+  hidden?: (row: Record<string, unknown>) => boolean;
 }
 
 interface DataTableProps {
   columns: Column[];
-  data: any[];
+  data: Record<string, unknown>[];
   loading?: boolean;
   error?: string | null;
   actions?: Action[];
@@ -93,9 +93,9 @@ const DataTable: React.FC<DataTableProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [actionAnchorEl, setActionAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedRow, setSelectedRow] = useState<any>(null);
+  const [selectedRow, setSelectedRow] = useState<Record<string, unknown> | null>(null);
 
-  const handleActionClick = (event: React.MouseEvent<HTMLElement>, row: any) => {
+  const handleActionClick = (event: React.MouseEvent<HTMLElement>, row: Record<string, unknown>) => {
     setActionAnchorEl(event.currentTarget);
     setSelectedRow(row);
   };
@@ -109,7 +109,7 @@ const DataTable: React.FC<DataTableProps> = ({
     if (!onSelectionChange) return;
     
     if (event.target.checked) {
-      const allIds = data.map(row => row.id);
+      const allIds = data.map(row => String(row.id));
       onSelectionChange(allIds);
     } else {
       onSelectionChange([]);
@@ -240,7 +240,7 @@ const DataTable: React.FC<DataTableProps> = ({
           </TableHead>
           <TableBody>
             {data.map((row, index) => {
-              const isItemSelected = isSelected(row.id);
+              const isItemSelected = isSelected(String(row.id));
               const labelId = `enhanced-table-checkbox-${index}`;
 
               return (
@@ -249,7 +249,7 @@ const DataTable: React.FC<DataTableProps> = ({
                   role={selectable ? 'checkbox' : undefined}
                   aria-checked={selectable ? isItemSelected : undefined}
                   tabIndex={-1}
-                  key={row.id}
+                  key={String(row.id)}
                   selected={isItemSelected}
                   sx={{
                     cursor: selectable ? 'pointer' : 'default',
@@ -263,7 +263,7 @@ const DataTable: React.FC<DataTableProps> = ({
                       <Checkbox
                         color="primary"
                         checked={isItemSelected}
-                        onChange={() => handleSelectRow(row.id)}
+                        onChange={() => handleSelectRow(String(row.id))}
                         inputProps={{
                           'aria-labelledby': labelId,
                         }}
@@ -271,7 +271,7 @@ const DataTable: React.FC<DataTableProps> = ({
                     </TableCell>
                   )}
                   {columns.map((column) => {
-                    const value = row[column.id];
+                    const value = row[column.id] as unknown;
                     return (
                       <TableCell key={column.id} align={column.align}>
                         {column.format ? column.format(value, row) : value}

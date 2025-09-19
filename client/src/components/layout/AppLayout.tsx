@@ -62,7 +62,7 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
   const dispatch = useAppDispatch();
   
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, profile } = useAppSelector((state) => state.auth);
   const { sidebarOpen } = useAppSelector((state) => state.ui);
   const { unreadCount } = useAppSelector((state) => state.notifications);
   const { unreadCount: messageCount } = useAppSelector((state) => state.messages);
@@ -75,7 +75,9 @@ const AppLayout: React.FC = () => {
       { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
     ];
 
-    if (user?.role === 'admin' || user?.role === 'principal') {
+    const userRole = profile?.role || user?.role;
+    
+    if (userRole === 'admin' || userRole === 'principal' || userRole === 'school_admin') {
       baseItems.push(
         { text: 'Schools', icon: <School />, path: '/schools' },
         { text: 'Students', icon: <People />, path: '/students' },
@@ -87,21 +89,21 @@ const AppLayout: React.FC = () => {
         { text: 'Announcements', icon: <Announcement />, path: '/announcements' },
         { text: 'Events', icon: <Event />, path: '/events' },
       );
-    } else if (user?.role === 'teacher') {
+    } else if (userRole === 'teacher') {
       baseItems.push(
         { text: 'My Classes', icon: <Class />, path: '/classes' },
         { text: 'Attendance', icon: <Assignment />, path: '/attendance' },
         { text: 'Grades', icon: <Grade />, path: '/grades' },
         { text: 'Students', icon: <People />, path: '/students' },
       );
-    } else if (user?.role === 'student') {
+    } else if (userRole === 'student') {
       baseItems.push(
         { text: 'My Grades', icon: <Grade />, path: '/grades' },
         { text: 'Attendance', icon: <Assignment />, path: '/attendance' },
         { text: 'Fees', icon: <Payment />, path: '/fees' },
         { text: 'Events', icon: <Event />, path: '/events' },
       );
-    } else if (user?.role === 'parent') {
+    } else if (userRole === 'parent') {
       baseItems.push(
         { text: 'Children', icon: <People />, path: '/children' },
         { text: 'Grades', icon: <Grade />, path: '/grades' },
@@ -133,7 +135,7 @@ const AppLayout: React.FC = () => {
   };
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logout() as any);
     handleProfileMenuClose();
     navigate('/login');
   };

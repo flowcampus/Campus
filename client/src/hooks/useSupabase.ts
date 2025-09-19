@@ -2,23 +2,27 @@ import { useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { SupabaseService } from '../services/supabaseService';
+import type { AuthUser } from '../types/auth';
+import type { Database } from '../types/database';
+
+type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
 export interface UseSupabaseReturn {
-  user: User | null;
+  user: AuthUser | null;
   session: Session | null;
-  profile: any | null;
+  profile: ProfileRow | null;
   loading: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, metadata: any) => Promise<void>;
+  signUp: (email: string, password: string, metadata: Record<string, any>) => Promise<void>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: any) => Promise<void>;
+  updateProfile: (updates: Partial<ProfileRow>) => Promise<void>;
 }
 
 export const useSupabase = (): UseSupabaseReturn => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<any | null>(null);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +41,7 @@ export const useSupabase = (): UseSupabaseReturn => {
           if (profileError) {
             console.warn('Profile fetch error:', profileError);
           } else {
-            setProfile(profileData);
+            setProfile(profileData as ProfileRow);
           }
         }
       } catch (err: any) {
@@ -61,7 +65,7 @@ export const useSupabase = (): UseSupabaseReturn => {
           if (profileError) {
             console.warn('Profile fetch error:', profileError);
           } else {
-            setProfile(profileData);
+            setProfile(profileData as ProfileRow);
           }
         } else {
           setProfile(null);
@@ -120,7 +124,7 @@ export const useSupabase = (): UseSupabaseReturn => {
       setError(null);
       const { data, error } = await SupabaseService.updateProfile(user.id, updates);
       if (error) throw new Error(error);
-      setProfile(data);
+      setProfile(data as ProfileRow);
     } catch (err: any) {
       setError(err.message);
       throw err;

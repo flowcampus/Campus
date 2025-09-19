@@ -1,11 +1,18 @@
 import { supabase, handleSupabaseError } from '../lib/supabase';
 import type { Database } from '../types/database';
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 type Tables = Database['public']['Tables'];
-type Profile = Tables['profiles']['Row'];
+type ProfileRow = Tables['profiles']['Row'];
+type ProfileInsert = Tables['profiles']['Insert'];
+type ProfileUpdate = Tables['profiles']['Update'];
 type School = Tables['schools']['Row'];
+type SchoolInsert = Tables['schools']['Insert'];
 type Student = Tables['students']['Row'];
+type StudentInsert = Tables['students']['Insert'];
 type Teacher = Tables['teachers']['Row'];
+type NotificationRow = Tables['notifications']['Row'];
+type NotificationInsert = Tables['notifications']['Insert'];
 
 export class SupabaseService {
   // Authentication
@@ -73,7 +80,7 @@ export class SupabaseService {
   }
 
   // Profile Management
-  static async getProfile(userId: string) {
+  static async getProfile(userId: string): Promise<{ data: ProfileRow | null; error: string | null }> {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -96,7 +103,7 @@ export class SupabaseService {
     }
   }
 
-  static async updateProfile(userId: string, updates: Partial<Profile>) {
+  static async updateProfile(userId: string, updates: ProfileUpdate): Promise<{ data: ProfileRow | null; error: string | null }> {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -113,7 +120,7 @@ export class SupabaseService {
   }
 
   // School Management
-  static async getSchools(filters?: { search?: string; type?: string; status?: boolean }) {
+  static async getSchools(filters?: { search?: string; type?: string; status?: boolean }): Promise<{ data: School[] | null; error: string | null }> {
     try {
       let query = supabase
         .from('schools')
@@ -140,7 +147,7 @@ export class SupabaseService {
     }
   }
 
-  static async createSchool(schoolData: Tables['schools']['Insert']) {
+  static async createSchool(schoolData: SchoolInsert): Promise<{ data: School | null; error: string | null }> {
     try {
       const { data, error } = await supabase
         .from('schools')
@@ -162,7 +169,7 @@ export class SupabaseService {
     status?: string;
     page?: number;
     limit?: number;
-  }) {
+  }): Promise<{ data: any[] | null; error: string | null }> {
     try {
       let query = supabase
         .from('students')
@@ -210,7 +217,7 @@ export class SupabaseService {
     }
   }
 
-  static async createStudent(studentData: Tables['students']['Insert']) {
+  static async createStudent(studentData: StudentInsert): Promise<{ data: any | null; error: string | null }> {
     try {
       const { data, error } = await supabase
         .from('students')
@@ -234,7 +241,7 @@ export class SupabaseService {
   }
 
   // Attendance Management
-  static async markAttendance(attendanceRecords: Tables['attendance']['Insert'][]) {
+  static async markAttendance(attendanceRecords: Tables['attendance']['Insert'][]): Promise<{ data: any[] | null; error: string | null }> {
     try {
       const { data, error } = await supabase
         .from('attendance')
@@ -250,7 +257,7 @@ export class SupabaseService {
     }
   }
 
-  static async getAttendance(classId: string, date: string) {
+  static async getAttendance(classId: string, date: string): Promise<{ data: any[] | null; error: string | null }> {
     try {
       const { data, error } = await supabase
         .from('attendance')
@@ -275,7 +282,7 @@ export class SupabaseService {
   }
 
   // Grades Management
-  static async recordGrade(gradeData: Tables['grades']['Insert']) {
+  static async recordGrade(gradeData: Tables['grades']['Insert']): Promise<{ data: any | null; error: string | null }> {
     try {
       const { data, error } = await supabase
         .from('grades')
@@ -303,7 +310,7 @@ export class SupabaseService {
     }
   }
 
-  static async getStudentGrades(studentId: string, termId?: string) {
+  static async getStudentGrades(studentId: string, termId?: string): Promise<{ data: any[] | null; error: string | null }> {
     try {
       let query = supabase
         .from('grades')
@@ -333,7 +340,7 @@ export class SupabaseService {
   }
 
   // Notifications
-  static async createNotification(notificationData: Tables['notifications']['Insert']) {
+  static async createNotification(notificationData: NotificationInsert): Promise<{ data: NotificationRow | null; error: string | null }> {
     try {
       const { data, error } = await supabase
         .from('notifications')
@@ -348,7 +355,7 @@ export class SupabaseService {
     }
   }
 
-  static async getUserNotifications(userId: string, unreadOnly = false) {
+  static async getUserNotifications(userId: string, unreadOnly = false): Promise<{ data: NotificationRow[] | null; error: string | null }> {
     try {
       let query = supabase
         .from('notifications')
@@ -368,7 +375,7 @@ export class SupabaseService {
     }
   }
 
-  static async markNotificationAsRead(notificationId: string) {
+  static async markNotificationAsRead(notificationId: string): Promise<{ data: NotificationRow | null; error: string | null }> {
     try {
       const { data, error } = await supabase
         .from('notifications')
@@ -385,7 +392,7 @@ export class SupabaseService {
   }
 
   // Real-time subscriptions
-  static subscribeToNotifications(userId: string, callback: (payload: any) => void) {
+  static subscribeToNotifications(userId: string, callback: (payload: RealtimePostgresChangesPayload<NotificationRow>) => void) {
     return supabase
       .channel('notifications')
       .on(
@@ -401,7 +408,7 @@ export class SupabaseService {
       .subscribe();
   }
 
-  static subscribeToAnnouncements(schoolId: string, callback: (payload: any) => void) {
+  static subscribeToAnnouncements(schoolId: string, callback: (payload: RealtimePostgresChangesPayload<any>) => void) {
     return supabase
       .channel('announcements')
       .on(
@@ -418,7 +425,7 @@ export class SupabaseService {
   }
 
   // Analytics and Reports
-  static async getSchoolStats(schoolId: string) {
+  static async getSchoolStats(schoolId: string): Promise<{ data: { totalStudents: number; totalTeachers: number; totalClasses: number } | null; error: string | null }> {
     try {
       const [studentsResult, teachersResult, classesResult] = await Promise.all([
         supabase
@@ -451,7 +458,7 @@ export class SupabaseService {
   }
 
   // Error handling wrapper
-  static async executeQuery<T>(queryFn: () => Promise<any>): Promise<{ data: T | null; error: string | null }> {
+  static async executeQuery<T>(queryFn: () => Promise<{ data: T; error: any }>): Promise<{ data: T | null; error: string | null }> {
     try {
       const result = await queryFn();
       if (result.error) throw result.error;

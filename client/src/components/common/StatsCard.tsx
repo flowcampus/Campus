@@ -207,7 +207,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
         <Box sx={{ mt: 2 }}>
           <LinearProgress
             variant="determinate"
-            value={progress.max ? (progress.value / progress.max) * 100 : progress.value}
+            value={Math.min(100, Math.max(0, progress.max ? (progress.value / progress.max) * 100 : progress.value))}
             color={progress.color || 'primary'}
             sx={{
               height: 6,

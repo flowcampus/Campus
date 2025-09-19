@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useAppSelector } from '../store/hooks';
-import { USER_ROLES } from '../utils/constants';
+import { USER_ROLES, type UserRole } from '../utils/constants';
+import type { RootState } from '../store/store';
 
 interface Permission {
   canView: boolean;
@@ -27,8 +28,8 @@ interface Permissions {
 }
 
 const usePermissions = (): Permissions => {
-  const { user, profile } = useAppSelector((state) => state.auth);
-  const userRole = profile?.role || user?.role || 'guest';
+  const { user, profile } = useAppSelector((state: RootState) => state.auth);
+  const userRole: UserRole = (profile?.role || user?.role || 'guest') as UserRole;
 
   const permissions = useMemo((): Permissions => {
     const defaultPermission: Permission = {

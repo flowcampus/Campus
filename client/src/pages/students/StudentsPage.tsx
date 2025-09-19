@@ -77,9 +77,9 @@ const StudentsPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [editingStudent, setEditingStudent] = useState<Record<string, unknown> | null>(null);
   const [actionAnchorEl, setActionAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [selectedStudent, setSelectedStudent] = useState<Record<string, unknown> | null>(null);
 
   const formik = useFormik({
     initialValues: {
@@ -116,9 +116,10 @@ const StudentsPage: React.FC = () => {
   });
 
   useEffect(() => {
-    if (user?.schoolId) {
+    const schoolId = profile?.school_id || user?.schoolId;
+    if (schoolId) {
       dispatch(fetchStudentsBySchool({ 
-        schoolId: user.schoolId,
+        schoolId,
         params: {
           page: page + 1,
           limit: rowsPerPage,
@@ -127,14 +128,14 @@ const StudentsPage: React.FC = () => {
           status: selectedStatus,
         }
       }));
-      dispatch(fetchClassesBySchool({ schoolId: user.schoolId }));
+      dispatch(fetchClassesBySchool({ schoolId }));
     }
-  }, [dispatch, user, page, rowsPerPage, searchTerm, selectedClass, selectedStatus]);
+  }, [dispatch, user, profile, page, rowsPerPage, searchTerm, selectedClass, selectedStatus]);
 
-  const handleOpenDialog = (student?: any) => {
+  const handleOpenDialog = (student?: Record<string, unknown>) => {
     if (student) {
       setEditingStudent(student);
-      formik.setValues(student);
+      formik.setValues(student as any);
     } else {
       setEditingStudent(null);
       formik.resetForm();
@@ -148,7 +149,7 @@ const StudentsPage: React.FC = () => {
     formik.resetForm();
   };
 
-  const handleActionClick = (event: React.MouseEvent<HTMLElement>, student: any) => {
+  const handleActionClick = (event: React.MouseEvent<HTMLElement>, student: Record<string, unknown>) => {
     setActionAnchorEl(event.currentTarget);
     setSelectedStudent(student);
   };
@@ -174,12 +175,12 @@ const StudentsPage: React.FC = () => {
   );
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'success';
-      case 'inactive': return 'error';
-      case 'suspended': return 'warning';
-      default: return 'default';
-    }
+    const statusColors: Record<string, 'success' | 'error' | 'warning' | 'default'> = {
+      'active': 'success',
+      'inactive': 'error',
+      'suspended': 'warning',
+    };
+    return statusColors[status] || 'default';
   };
 
   return (

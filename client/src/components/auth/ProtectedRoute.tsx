@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
+import { useAppSelector } from '../../store/hooks';
+import type { RootState } from '../../store/store';
 import { Box, CircularProgress } from '@mui/material';
 
 interface ProtectedRouteProps {
@@ -13,7 +13,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   requiredRole 
 }) => {
-  const { isAuthenticated, loading, user } = useSelector(
+  const { isAuthenticated, loading, user, profile } = useAppSelector(
     (state: RootState) => state.auth
   );
 
@@ -34,7 +34,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/auth/login" replace />;
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
+  const userRole = profile?.role || user?.role;
+  if (requiredRole && userRole !== requiredRole) {
     return <Navigate to="/dashboard" replace />;
   }
 

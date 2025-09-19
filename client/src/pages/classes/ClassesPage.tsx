@@ -48,7 +48,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { RootState } from '../../store/store';
+import type { RootState } from '../../store/store';
 import { fetchClassesBySchool, createClass } from '../../store/slices/classSlice';
 import type { Class as ClassModel } from '../../store/slices/classSlice';
 

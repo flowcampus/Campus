@@ -14,10 +14,28 @@ export interface User {
   schoolCode?: string;
   avatar?: string;
   adminRole?: string;
+  profile?: {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    phone?: string;
+    avatar_url?: string;
+    role: string;
+    school_id?: string;
+    is_active: boolean;
+    schools?: {
+      id: string;
+      name: string;
+      code: string;
+      type: string;
+    };
+  };
 }
 
 interface AuthState {
   user: User | null;
+  profile: User['profile'] | null;
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
@@ -26,6 +44,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
+  profile: null,
   token: localStorage.getItem('campus_token'),
   isAuthenticated: false,
   loading: false,
@@ -288,6 +307,15 @@ const authSlice = createSlice({
     updateUser: (state, action: PayloadAction<Partial<User>>) => {
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
+        if (action.payload.profile) {
+          state.profile = action.payload.profile;
+        }
+      }
+    },
+    setProfile: (state, action: PayloadAction<User['profile']>) => {
+      state.profile = action.payload;
+      if (state.user) {
+        state.user.profile = action.payload;
       }
     },
   },
@@ -302,6 +330,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
+        state.profile = action.payload.user?.profile || null;
         state.token = action.payload.token;
         state.error = null;
       })
@@ -322,6 +351,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
+        state.profile = action.payload.user?.profile || null;
         state.token = action.payload.token;
         state.error = null;
       })
@@ -342,6 +372,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
+        state.profile = action.payload.user?.profile || null;
         state.token = action.payload.token;
         state.error = null;
       })
@@ -362,6 +393,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
+        state.profile = action.payload.user?.profile || null;
         state.token = action.payload.token;
         state.error = null;
       })
@@ -382,6 +414,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
+        state.profile = action.payload.user?.profile || null;
         state.token = action.payload.token;
         state.error = null;
       })
@@ -401,6 +434,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
+        state.profile = action.payload.user?.profile || null;
         state.error = null;
       })
       .addCase(checkAuth.rejected, (state) => {
@@ -415,6 +449,7 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.isAuthenticated = false;
         state.user = null;
+        state.profile = null;
         state.token = null;
         state.error = null;
       })
@@ -449,5 +484,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, setCredentials, updateUser } = authSlice.actions;
+export const { clearError, setCredentials, updateUser, setProfile } = authSlice.actions;
 export default authSlice.reducer;

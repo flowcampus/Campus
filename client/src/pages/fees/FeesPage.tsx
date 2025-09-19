@@ -50,7 +50,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { RootState } from '../../store/store';
+import type { RootState } from '../../store/store';
 import { createFeeStructure, recordFeePayment, fetchStudentFeeStatus } from '../../store/slices/feeSlice';
 
 interface FeeStructure {

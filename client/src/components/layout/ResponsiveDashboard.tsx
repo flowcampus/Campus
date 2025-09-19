@@ -73,7 +73,7 @@ const ResponsiveDashboard: React.FC = () => {
   const [showOfflineAlert, setShowOfflineAlert] = useState(false);
 
   // Real-time notifications
-  const { notifications, unreadCount } = useNotifications(user?.id || '');
+  const { unreadCount } = useNotifications(user?.id || '');
 
   // Network status monitoring
   React.useEffect(() => {
@@ -113,7 +113,7 @@ const ResponsiveDashboard: React.FC = () => {
   ];
 
   const filteredNavItems = navItems.filter(item => 
-    !item.roles || item.roles.includes(profile?.role || '') || item.roles.includes(user?.profile?.role || '')
+    !item.roles || item.roles.includes(profile?.role || user?.role || '') || item.roles.includes(user?.profile?.role || '')
   );
 
   const handleDrawerToggle = () => {

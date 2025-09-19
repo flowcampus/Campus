@@ -24,6 +24,47 @@ export interface Database {
           updated_at: string
         }
         Insert: {
+          id?: string
+          email: string
+          first_name: string
+          last_name: string
+          phone?: string | null
+          avatar_url?: string | null
+          role?: 'super_admin' | 'school_admin' | 'principal' | 'teacher' | 'student' | 'parent' | 'guest'
+          school_id?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          first_name?: string
+          last_name?: string
+          phone?: string | null
+          avatar_url?: string | null
+          role?: 'super_admin' | 'school_admin' | 'principal' | 'teacher' | 'student' | 'parent' | 'guest'
+          school_id?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          first_name: string
+          last_name: string
+          phone: string | null
+          avatar_url: string | null
+          role: 'super_admin' | 'school_admin' | 'principal' | 'teacher' | 'student' | 'parent' | 'guest'
+          school_id: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
           id: string
           email: string
           first_name: string
@@ -352,6 +393,44 @@ export interface Database {
           type?: 'info' | 'warning' | 'error' | 'success'
           is_read?: boolean
           action_url?: string | null
+          created_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          school_id: string | null
+          title: string
+          message: string
+          type: 'info' | 'warning' | 'error' | 'success' | 'announcement' | 'grade' | 'attendance' | 'fee' | 'event'
+          is_read: boolean
+          action_url: string | null
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          school_id?: string | null
+          title: string
+          message: string
+          type: 'info' | 'warning' | 'error' | 'success' | 'announcement' | 'grade' | 'attendance' | 'fee' | 'event'
+          is_read?: boolean
+          action_url?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          school_id?: string | null
+          title?: string
+          message?: string
+          type?: 'info' | 'warning' | 'error' | 'success' | 'announcement' | 'grade' | 'attendance' | 'fee' | 'event'
+          is_read?: boolean
+          action_url?: string | null
+          metadata?: Json | null
           created_at?: string
         }
       }

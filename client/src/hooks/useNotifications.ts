@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
+import type { RootState } from '../store/store';
 import { 
   fetchNotifications, 
   markNotificationAsRead, 
@@ -8,9 +9,13 @@ import {
 } from '../store/slices/notificationSlice';
 import { showSnackbar } from '../store/slices/uiSlice';
 import { supabase } from '../lib/supabase';
+import type { Database } from '../types/database';
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+
+type NotificationRow = Database['public']['Tables']['notifications']['Row'];
 
 interface UseNotificationsReturn {
-  notifications: any[];
+  notifications: NotificationRow[];
   unreadCount: number;
   loading: boolean;
   error: string | null;
@@ -21,8 +26,8 @@ interface UseNotificationsReturn {
 
 const useNotifications = (): UseNotificationsReturn => {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
-  const { notifications, unreadCount, loading, error } = useAppSelector((state) => state.notifications);
+  const { user } = useAppSelector((state: RootState) => state.auth);
+  const { notifications, unreadCount, loading, error } = useAppSelector((state: RootState) => state.notifications);
   const [realtimeConnected, setRealtimeConnected] = useState(false);
 
   // Fetch notifications on mount and user change
@@ -46,13 +51,14 @@ const useNotifications = (): UseNotificationsReturn => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`
         },
-        (payload) => {
-          dispatch(addNotification(payload.new));
+        (payload: RealtimePostgresChangesPayload<NotificationRow>) => {
+          const newNotification = payload.new as NotificationRow;
+          dispatch(addNotification(newNotification));
           
           // Show toast notification for new notifications
           dispatch(showSnackbar({
-            message: payload.new.title,
-            severity: payload.new.type === 'error' ? 'error' : 'info'
+            message: newNotification.title,
+            severity: newNotification.type === 'error' ? 'error' : 'info'
           }));
         }
       )
@@ -64,7 +70,7 @@ const useNotifications = (): UseNotificationsReturn => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`
         },
-        (payload) => {
+        (payload: RealtimePostgresChangesPayload<NotificationRow>) => {
           // Handle notification updates (e.g., mark as read)
           console.log('Notification updated:', payload);
         }

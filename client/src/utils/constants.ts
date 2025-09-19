@@ -66,8 +66,9 @@ export const USER_ROLES = {
   SALES_ADMIN: 'sales_admin',
   CONTENT_ADMIN: 'content_admin',
   FINANCE_ADMIN: 'finance_admin',
-  MINISTRY_INSPECTOR: 'ministry_inspector',
 } as const;
+
+export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 
 export const SCHOOL_TYPES = {
   NURSERY: 'nursery',

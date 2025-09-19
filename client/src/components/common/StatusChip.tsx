@@ -12,7 +12,10 @@ const StatusChip: React.FC<StatusChipProps> = ({
   showIcon = false, 
   ...props 
 }) => {
-  const color = getStatusColor(status) as ChipProps['color'];
+  const colorValue = getStatusColor(status);
+  const color = (['default', 'primary', 'secondary', 'error', 'info', 'success', 'warning'].includes(colorValue) 
+    ? colorValue 
+    : 'default') as ChipProps['color'];
   const label = getStatusLabel(status);
 
   return (

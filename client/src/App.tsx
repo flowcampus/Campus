@@ -1,6 +1,9 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box } from '@mui/material';
+import { useEffect } from 'react';
+import { useAppDispatch } from './store/hooks';
+import { initializeAuth } from './store/slices/supabaseAuthSlice';
 
 // Layouts and route guards
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -49,6 +52,13 @@ import Reports from './pages/reports/Reports';
 import Settings from './pages/settings/Settings';
 
 function App() {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    // Initialize Supabase auth on app start
+    dispatch(initializeAuth());
+  }, [dispatch]);
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <Routes>

@@ -1,30 +1,9 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { User, Session } from '@supabase/supabase-js';
 import { SupabaseService } from '../../services/supabaseService';
+import type { AuthUser, AuthState, LoginCredentials, RegisterData } from '../../types/auth';
 
-export interface AuthUser extends User {
-  profile?: {
-    id: string;
-    email: string;
-    first_name: string;
-    last_name: string;
-    phone?: string;
-    avatar_url?: string;
-    role: string;
-    school_id?: string;
-    is_active: boolean;
-  };
-}
-
-interface AuthState {
-  user: AuthUser | null;
-  session: Session | null;
-  profile: any | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
-  initialized: boolean;
-}
+export type { AuthUser, AuthState };
 
 const initialState: AuthState = {
   user: null,
@@ -53,7 +32,7 @@ export const initializeAuth = createAsyncThunk(
 export const signIn = createAsyncThunk(
   'auth/signIn',
   async (
-    { email, password, role }: { email: string; password: string; role?: string },
+    { email, password, role }: LoginCredentials,
     { rejectWithValue }
   ) => {
     try {
@@ -80,35 +59,19 @@ export const signIn = createAsyncThunk(
 export const signUp = createAsyncThunk(
   'auth/signUp',
   async (
-    {
-      email,
-      password,
-      firstName,
-      lastName,
-      role,
-      phone,
-      schoolCode
-    }: {
-      email: string;
-      password: string;
-      firstName: string;
-      lastName: string;
-      role: string;
-      phone?: string;
-      schoolCode?: string;
-    },
+    userData: RegisterData,
     { rejectWithValue }
   ) => {
     try {
       const metadata = {
-        first_name: firstName,
-        last_name: lastName,
-        role,
-        phone,
-        school_code: schoolCode
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        role: userData.role,
+        phone: userData.phone,
+        school_code: userData.schoolCode
       };
 
-      const { data, error } = await SupabaseService.signUp(email, password, metadata);
+      const { data, error } = await SupabaseService.signUp(userData.email, userData.password, metadata);
       if (error) throw new Error(error);
       return data;
     } catch (error: any) {
@@ -132,7 +95,7 @@ export const signOut = createAsyncThunk(
 
 export const updateProfile = createAsyncThunk(
   'auth/updateProfile',
-  async (updates: any, { getState, rejectWithValue }) => {
+  async (updates: Partial<AuthUser['profile']>, { getState, rejectWithValue }) => {
     try {
       const state = getState() as { auth: AuthState };
       const userId = state.auth.user?.id;

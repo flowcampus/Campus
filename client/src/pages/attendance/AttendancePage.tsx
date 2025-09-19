@@ -50,7 +50,7 @@ import {
   Save as SaveIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
+import type { RootState } from '../../store/store';
 import { markAttendance } from '../../store/slices/attendanceSlice';
 
 interface Student {

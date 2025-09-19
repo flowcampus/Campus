@@ -31,7 +31,7 @@ interface FilterOption {
   key: string;
   label: string;
   type: 'select' | 'multiselect' | 'date' | 'daterange' | 'number';
-  options?: Array<{ value: string; label: string }>;
+  options?: Array<{ value: string | number; label: string }>;
   placeholder?: string;
 }
 
@@ -40,7 +40,7 @@ interface SearchAndFilterProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   filters?: FilterOption[];
-  filterValues: Record<string, any>;
+  filterValues: Record<string, string | number | string[] | null | undefined>;
   onFilterChange: (key: string, value: any) => void;
   onClearFilters: () => void;
   showAdvancedFilters?: boolean;

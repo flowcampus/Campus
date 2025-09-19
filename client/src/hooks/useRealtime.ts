@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import type { Database } from '../types/database';
+
+type Tables = Database['public']['Tables'];
+type NotificationRow = Tables['notifications']['Row'];
 
 interface UseRealtimeOptions {
   table: string;
@@ -10,7 +14,7 @@ interface UseRealtimeOptions {
 
 export const useRealtime = (
   options: UseRealtimeOptions,
-  callback: (payload: any) => void
+  callback: (payload: RealtimePostgresChangesPayload<any>) => void
 ) => {
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [connected, setConnected] = useState(false);
@@ -30,7 +34,7 @@ export const useRealtime = (
             table: options.table,
             ...(options.filter && { filter: options.filter })
           },
-          (payload) => {
+          (payload: RealtimePostgresChangesPayload<any>) => {
             try {
               callback(payload);
             } catch (err: any) {
@@ -64,7 +68,7 @@ export const useRealtime = (
 };
 
 export const useNotifications = (userId: string) => {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<NotificationRow[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const { connected } = useRealtime(
@@ -73,10 +77,11 @@ export const useNotifications = (userId: string) => {
       filter: `user_id=eq.${userId}`,
       event: 'INSERT'
     },
-    (payload) => {
+    (payload: RealtimePostgresChangesPayload<NotificationRow>) => {
       if (payload.eventType === 'INSERT') {
-        setNotifications(prev => [payload.new, ...prev]);
-        if (!payload.new.is_read) {
+        const newNotification = payload.new as NotificationRow;
+        setNotifications(prev => [newNotification, ...prev]);
+        if (!newNotification.is_read) {
           setUnreadCount(prev => prev + 1);
         }
       }
@@ -95,8 +100,8 @@ export const useNotifications = (userId: string) => {
 
         if (error) throw error;
         
-        setNotifications(data || []);
-        setUnreadCount(data?.filter(n => !n.is_read).length || 0);
+        setNotifications(data as NotificationRow[] || []);
+        setUnreadCount(data?.filter((n: NotificationRow) => !n.is_read).length || 0);
       } catch (err) {
         console.error('Failed to fetch notifications:', err);
       }
@@ -117,7 +122,7 @@ export const useNotifications = (userId: string) => {
       if (error) throw error;
 
       setNotifications(prev =>
-        prev.map(n =>
+        prev.map((n: NotificationRow) =>
           n.id === notificationId ? { ...n, is_read: true } : n
         )
       );

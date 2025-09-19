@@ -17,6 +17,7 @@ import {
   ListItemIcon,
   ListItemText,
   useTheme,
+  MenuItem,
 } from '@mui/material';
 import {
   AdminPanelSettings,

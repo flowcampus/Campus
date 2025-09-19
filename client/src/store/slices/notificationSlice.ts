@@ -1,17 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { notificationsAPI } from '../../services/api';
+import type { Database } from '../../types/database';
 
-export interface Notification {
-  id: string;
-  userId: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'announcement' | 'grade' | 'attendance' | 'fee' | 'event';
-  isRead: boolean;
-  readAt?: string;
-  metadata?: any;
-  createdAt: string;
-}
+type NotificationRow = Database['public']['Tables']['notifications']['Row'];
+
+export type Notification = NotificationRow;
 
 interface NotificationState {
   notifications: Notification[];
@@ -101,8 +94,9 @@ const notificationSlice = createSlice({
       })
       .addCase(fetchNotifications.fulfilled, (state, action) => {
         state.loading = false;
-        state.notifications = action.payload.notifications;
-        state.unreadCount = action.payload.notifications.filter((n: Notification) => !n.isRead).length;
+        state.notifications = action.payload.notifications || action.payload;
+        const notificationsList = action.payload.notifications || action.payload;
+        state.unreadCount = notificationsList.filter((n: Notification) => !n.is_read).length;
         state.error = null;
       })
       .addCase(fetchNotifications.rejected, (state, action) => {
@@ -111,17 +105,15 @@ const notificationSlice = createSlice({
       })
       .addCase(markNotificationAsRead.fulfilled, (state, action) => {
         const notification = state.notifications.find(n => n.id === action.payload.notificationId);
-        if (notification && !notification.isRead) {
-          notification.isRead = true;
-          notification.readAt = action.payload.readAt;
+        if (notification && !notification.is_read) {
+          notification.is_read = true;
           state.unreadCount = Math.max(0, state.unreadCount - 1);
         }
       })
       .addCase(markAllNotificationsAsRead.fulfilled, (state) => {
         state.notifications.forEach(notification => {
-          if (!notification.isRead) {
-            notification.isRead = true;
-            notification.readAt = new Date().toISOString();
+          if (!notification.is_read) {
+            notification.is_read = true;
           }
         });
         state.unreadCount = 0;

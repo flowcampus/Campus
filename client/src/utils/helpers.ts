@@ -1,5 +1,8 @@
 import { format, parseISO, isValid, differenceInDays, differenceInHours, differenceInMinutes } from 'date-fns';
-import { GRADE_SCALE, STATUS_COLORS, GRADE_COLORS } from './constants';
+import { GRADE_SCALE, STATUS_COLORS, GRADE_COLORS, type UserRole } from './constants';
+
+type StatusKey = keyof typeof STATUS_COLORS;
+type GradeKey = keyof typeof GRADE_COLORS;
 
 // Date and time utilities
 export const formatDate = (date: string | Date, formatStr = 'MMM dd, yyyy'): string => {
@@ -140,12 +143,12 @@ export const calculateGPA = (grades: Array<{ grade: string; credits?: number }>)
 };
 
 export const getGradeColor = (grade: string): string => {
-  return GRADE_COLORS[grade as keyof typeof GRADE_COLORS] || 'default';
+  return GRADE_COLORS[grade as GradeKey] || 'default';
 };
 
 // Status utilities
 export const getStatusColor = (status: string): string => {
-  return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'default';
+  return STATUS_COLORS[status as StatusKey] || 'default';
 };
 
 export const getStatusLabel = (status: string): string => {
