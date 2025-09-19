@@ -45,6 +45,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { signOut } from '../../store/slices/supabaseAuthSlice';
 import { useNotifications } from '../../hooks/useRealtime';
 import ErrorBoundary from '../common/ErrorBoundary';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 const drawerWidth = 280;
 const mobileDrawerWidth = 260;
@@ -147,18 +148,10 @@ const ResponsiveDashboard: React.FC = () => {
   // Show loading state during auth initialization
   if (authLoading) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-        }}
-      >
-        <LoadingSpinner message="Initializing Campus..." size="large" />
-      </Box>
+      <LoadingSpinner message="Initializing Campus..." size="large" fullScreen />
     );
   }
+
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Logo Section */}

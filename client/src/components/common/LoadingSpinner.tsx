@@ -6,6 +6,7 @@ import {
   Skeleton,
   Card,
   CardContent,
+  Fade,
 } from '@mui/material';
 import { School as SchoolIcon } from '@mui/icons-material';
 
@@ -77,36 +78,25 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
             },
           }}
         />
-      </Box>
-    );
-  }
-
-  // Default spinner variant
-  const content = (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 2,
-        p: { xs: 2, sm: 3 },
-      }}
-    >
-      {/* Animated Logo */}
+    <Fade in timeout={300}>
       <Box
-        sx={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
+      <Box
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: fullScreen 
+            ? 'rgba(255, 255, 255, 0.95)' 
+            : 'transparent',
+          backdropFilter: fullScreen ? 'blur(4px)' : 'none',
           justifyContent: 'center',
-        }}
-      >
-        <CircularProgress
-          size={currentSize.spinner}
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: fullScreen ? 9999 : 'auto',
           thickness={4}
           sx={{
-            color: 'primary.main',
           }}
         />
         <Box
@@ -164,14 +154,9 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
             '40%': {
               transform: 'scale(1)',
             },
-          },
-        }}
-      >
-        <div />
-        <div />
-        <div />
+        {content}
       </Box>
-    </Box>
+    </Fade>
   );
 
   if (fullScreen) {
