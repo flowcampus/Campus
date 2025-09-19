@@ -5,39 +5,60 @@ import {
   Button,
   Card,
   CardContent,
-  useTheme,
+  Alert,
+  Collapse,
+  IconButton,
 } from '@mui/material';
 import {
   Error as ErrorIcon,
   Refresh as RefreshIcon,
   Home as HomeIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  BugReport as BugReportIcon,
 } from '@mui/icons-material';
-import { responsivePatterns, animations } from '../../styles/responsive';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
   hasError: boolean;
   error?: Error;
   errorInfo?: ErrorInfo;
+  showDetails: boolean;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, showDetails: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, showDetails: false };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({ error, errorInfo });
+    
+    // Call optional error handler
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+    
+    // Log to external service in production
+    if (process.env.NODE_ENV === 'production') {
+      // TODO: Send to error tracking service (Sentry, LogRocket, etc.)
+      console.error('Production error:', {
+        error: error.toString(),
+        stack: error.stack,
+        componentStack: errorInfo.componentStack
+      });
+    }
   }
 
   handleRefresh = () => {
@@ -48,6 +69,9 @@ class ErrorBoundary extends Component<Props, State> {
     window.location.href = '/';
   };
 
+  toggleDetails = () => {
+    this.setState(prev => ({ showDetails: !prev.showDetails }));
+  };
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
@@ -57,6 +81,9 @@ class ErrorBoundary extends Component<Props, State> {
       return (
         <ErrorFallback
           error={this.state.error}
+          errorInfo={this.state.errorInfo}
+          showDetails={this.state.showDetails}
+          onToggleDetails={this.toggleDetails}
           onRefresh={this.handleRefresh}
           onGoHome={this.handleGoHome}
         />
@@ -69,12 +96,18 @@ class ErrorBoundary extends Component<Props, State> {
 
 interface ErrorFallbackProps {
   error?: Error;
+  errorInfo?: ErrorInfo;
+  showDetails: boolean;
+  onToggleDetails: () => void;
   onRefresh: () => void;
   onGoHome: () => void;
 }
 
 const ErrorFallback: React.FC<ErrorFallbackProps> = ({
   error,
+  errorInfo,
+  showDetails,
+  onToggleDetails,
   onRefresh,
   onGoHome,
 }) => {
@@ -91,10 +124,11 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
     >
       <Card
         sx={{
-          ...responsivePatterns.cardBase,
+          p: { xs: 3, sm: 4 },
           maxWidth: 500,
+          width: '100%',
           textAlign: 'center',
-          ...animations.slideInUp,
+          boxShadow: 3,
         }}
       >
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
@@ -132,32 +166,43 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
             We're sorry, but something unexpected happened. Please try refreshing the page or go back to the homepage.
           </Typography>
 
-          {process.env.NODE_ENV === 'development' && error && (
-            <Box
-              sx={{
-                mt: 2,
-                p: 2,
-                bgcolor: 'grey.100',
-                borderRadius: 1,
-                textAlign: 'left',
-                overflow: 'auto',
-                maxHeight: 200,
-              }}
+          {/* Error Details Toggle */}
+          <Box sx={{ mb: 3 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<BugReportIcon />}
+              endIcon={showDetails ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              onClick={onToggleDetails}
+              sx={{ mb: 2 }}
             >
-              <Typography
-                variant="caption"
-                component="pre"
-                sx={{
-                  fontSize: '0.75rem',
-                  fontFamily: 'monospace',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                }}
-              >
-                {error.toString()}
-              </Typography>
-            </Box>
-          )}
+              {showDetails ? 'Hide' : 'Show'} Technical Details
+            </Button>
+            
+            <Collapse in={showDetails}>
+              <Alert severity="error" sx={{ textAlign: 'left', mb: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Error Details:
+                </Typography>
+                <Typography
+                  variant="body2"
+                  component="pre"
+                  sx={{
+                    fontSize: '0.75rem',
+                    fontFamily: 'monospace',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    maxHeight: 200,
+                    overflow: 'auto',
+                  }}
+                >
+                  {error?.toString()}
+                  {error?.stack && `\n\nStack Trace:\n${error.stack}`}
+                  {errorInfo?.componentStack && `\n\nComponent Stack:${errorInfo.componentStack}`}
+                </Typography>
+              </Alert>
+            </Collapse>
+          </Box>
 
           <Box
             sx={{
@@ -192,6 +237,10 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
               Go Home
             </Button>
           </Box>
+          
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 3, display: 'block' }}>
+            Error ID: {Date.now().toString(36)} • Campus v1.0.0
+          </Typography>
         </CardContent>
       </Card>
     </Box>

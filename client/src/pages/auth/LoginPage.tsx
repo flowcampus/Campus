@@ -13,6 +13,8 @@ import {
   Divider,
   Chip,
   CircularProgress,
+  Tooltip,
+  Fade,
 } from '@mui/material';
 import {
   Visibility,
@@ -21,12 +23,13 @@ import {
   Lock,
   Person,
   AdminPanelSettings,
+  Security as SecurityIcon,
 } from '@mui/icons-material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { login, guestLogin, adminLogin, clearError } from '../../store/slices/authSlice';
+import { signIn, clearError } from '../../store/slices/supabaseAuthSlice';
 
 const validationSchema = yup.object({
   email: yup
@@ -46,8 +49,8 @@ const LoginPage: React.FC = () => {
   
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [adminMode, setAdminMode] = useState(false);
-  const [adminClickCount, setAdminClickCount] = useState(0);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -55,36 +58,32 @@ const LoginPage: React.FC = () => {
       password: '',
     },
     validationSchema: validationSchema,
-    onSubmit: (values) => {
-      if (adminMode) {
-        dispatch(adminLogin({
+    onSubmit: async (values) => {
+      if (isLocked) return;
+      
+      try {
+        await dispatch(signIn({
           email: values.email,
           password: values.password,
-          adminKey: values.password, // In real implementation, this would be separate
-        }));
-      } else {
-        dispatch(login({
-          emailOrPhone: values.email,
-          password: values.password,
-        }));
+        })).unwrap();
+        
+        // Reset attempts on successful login
+        setLoginAttempts(0);
+      } catch (error) {
+        setLoginAttempts(prev => prev + 1);
+        
+        // Lock after 5 failed attempts
+        if (loginAttempts >= 4) {
+          setIsLocked(true);
+          setTimeout(() => {
+            setIsLocked(false);
+            setLoginAttempts(0);
+          }, 300000); // 5 minutes lockout
+        }
       }
     },
   });
 
-  // Handle admin portal access (secret trigger)
-  const handleLogoClick = () => {
-    setAdminClickCount(prev => prev + 1);
-    if (adminClickCount >= 4) {
-      setAdminMode(true);
-      setAdminClickCount(0);
-    }
-    // Reset counter after 3 seconds
-    setTimeout(() => setAdminClickCount(0), 3000);
-  };
-
-  const handleGuestLogin = () => {
-    dispatch(guestLogin(''));
-  };
 
   const handleTogglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -96,43 +95,52 @@ const LoginPage: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Redirect to role selection on component mount
-  useEffect(() => {
-    navigate('/auth/role-selection');
-  }, [navigate]);
 
   useEffect(() => {
     // Clear errors when component mounts
     dispatch(clearError());
   }, [dispatch]);
 
+  // Auto-clear error after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        dispatch(clearError());
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, dispatch]);
   return (
-    <Box component="form" onSubmit={formik.handleSubmit} sx={{ width: '100%' }}>
-      {/* Admin Mode Indicator */}
-      {adminMode && (
-        <Alert 
-          severity="warning" 
-          sx={{ mb: 3 }}
-          action={
-            <Button 
-              color="inherit" 
-              size="small" 
-              onClick={() => setAdminMode(false)}
-            >
-              Exit
-            </Button>
-          }
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <AdminPanelSettings sx={{ mr: 1 }} />
-            Admin Portal Access Mode
-          </Box>
-        </Alert>
-      )}
+    <Fade in timeout={600}>
+      <Box component="form" onSubmit={formik.handleSubmit} sx={{ width: '100%' }}>
+        {/* Security Notice */}
+        {loginAttempts > 2 && (
+          <Alert 
+            severity="warning" 
+            sx={{ mb: 3 }}
+            icon={<SecurityIcon />}
+          >
+            Multiple failed login attempts detected. Account will be temporarily locked after 5 failed attempts.
+          </Alert>
+        )}
+        
+        {/* Lockout Notice */}
+        {isLocked && (
+          <Alert 
+            severity="error" 
+            sx={{ mb: 3 }}
+          >
+            Account temporarily locked due to multiple failed login attempts. Please try again in 5 minutes.
+          </Alert>
+        )}
 
       {/* Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => dispatch(clearError())}>
+        <Alert 
+          severity="error" 
+          sx={{ mb: 3 }} 
+          onClose={() => dispatch(clearError())}
+        >
           {error}
         </Alert>
       )}
@@ -149,6 +157,7 @@ const LoginPage: React.FC = () => {
         onBlur={formik.handleBlur}
         error={formik.touched.email && Boolean(formik.errors.email)}
         helperText={formik.touched.email && formik.errors.email}
+        disabled={isLocked}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
@@ -163,13 +172,14 @@ const LoginPage: React.FC = () => {
         fullWidth
         id="password"
         name="password"
-        label={adminMode ? "Admin Password/Key" : "Password"}
+        label="Password"
         type={showPassword ? 'text' : 'password'}
         value={formik.values.password}
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
         error={formik.touched.password && Boolean(formik.errors.password)}
         helperText={formik.touched.password && formik.errors.password}
+        disabled={isLocked}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
@@ -178,13 +188,16 @@ const LoginPage: React.FC = () => {
           ),
           endAdornment: (
             <InputAdornment position="end">
-              <IconButton
+              <Tooltip title={showPassword ? 'Hide password' : 'Show password'}>
+                <IconButton
                 aria-label="toggle password visibility"
                 onClick={handleTogglePasswordVisibility}
                 edge="end"
+                  disabled={isLocked}
               >
                 {showPassword ? <VisibilityOff /> : <Visibility />}
               </IconButton>
+              </Tooltip>
             </InputAdornment>
           ),
         }}
@@ -199,13 +212,14 @@ const LoginPage: React.FC = () => {
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
               color="primary"
+              disabled={isLocked}
             />
           }
           label="Remember me"
         />
         <Link
           component={RouterLink}
-          to="/forgot-password"
+          to="/auth/forgot-password"
           variant="body2"
           sx={{ textDecoration: 'none' }}
         >
@@ -219,7 +233,7 @@ const LoginPage: React.FC = () => {
         variant="contained"
         fullWidth
         type="submit"
-        disabled={loading}
+        disabled={loading || isLocked}
         sx={{
           mb: 2,
           py: 1.5,
@@ -229,24 +243,18 @@ const LoginPage: React.FC = () => {
           '&:hover': {
             background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
           },
+          '&:disabled': {
+            background: 'grey.300',
+          },
         }}
       >
         {loading ? (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-            {adminMode ? 'Accessing Admin Portal...' : 'Signing In...'}
+            Signing In...
           </Box>
         ) : (
-          <>
-            {adminMode ? (
-              <>
-                <AdminPanelSettings sx={{ mr: 1 }} />
-                Access Admin Portal
-              </>
-            ) : (
-              'Sign In'
-            )}
-          </>
+          isLocked ? 'Account Locked' : 'Sign In'
         )}
       </Button>
 
@@ -255,26 +263,6 @@ const LoginPage: React.FC = () => {
         <Chip label="OR" size="small" />
       </Divider>
 
-      {/* Guest Login */}
-      <Button
-        variant="outlined"
-        fullWidth
-        onClick={handleGuestLogin}
-        disabled={loading}
-        sx={{
-          mb: 3,
-          py: 1.5,
-          borderColor: 'primary.main',
-          color: 'primary.main',
-          '&:hover': {
-            backgroundColor: 'primary.main',
-            color: 'white',
-          },
-        }}
-      >
-        <Person sx={{ mr: 1 }} />
-        Continue as Guest
-      </Button>
 
       {/* Register Link */}
       <Box sx={{ textAlign: 'center' }}>
@@ -294,7 +282,7 @@ const LoginPage: React.FC = () => {
           </Link>
           <Link
             component={RouterLink}
-            to="/auth/register"
+            to="/auth/role-selection"
             variant="body2"
             sx={{ 
               textDecoration: 'none',
@@ -303,25 +291,11 @@ const LoginPage: React.FC = () => {
               '&:hover': { color: 'primary.dark' }
             }}
           >
-            Don't have an account? Sign up
+            Choose your role
           </Link>
         </Box>
       </Box>
 
-      {/* Hidden Admin Portal Trigger */}
-      <Box
-        onClick={handleLogoClick}
-        sx={{
-          position: 'absolute',
-          top: -50,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 20,
-          height: 20,
-          cursor: 'pointer',
-          opacity: 0,
-        }}
-      />
 
       {/* Multi-language Support Hint */}
       <Box sx={{ mt: 3, textAlign: 'center' }}>
@@ -330,6 +304,7 @@ const LoginPage: React.FC = () => {
         </Typography>
       </Box>
     </Box>
+    </Fade>
   );
 };
 

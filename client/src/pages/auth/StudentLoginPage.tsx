@@ -15,6 +15,8 @@ import {
   CardContent,
   Divider,
   Chip,
+  Tooltip,
+  Fade,
 } from '@mui/material';
 import {
   Visibility,
@@ -24,12 +26,13 @@ import {
   School,
   ArrowBack,
   Person,
+  Phone as PhoneIcon,
 } from '@mui/icons-material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { login, clearError } from '../../store/slices/authSlice';
+import { signIn, clearError } from '../../store/slices/supabaseAuthSlice';
 
 const validationSchema = yup.object({
   identifier: yup
@@ -59,6 +62,7 @@ const StudentLoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<any>(null);
+  const [isEmailLogin, setIsEmailLogin] = useState(true);
 
   const formik = useFormik({
     initialValues: {
@@ -67,13 +71,16 @@ const StudentLoginPage: React.FC = () => {
       schoolCode: '',
     },
     validationSchema: validationSchema,
-    onSubmit: (values) => {
-      dispatch(login({
-        emailOrPhone: values.identifier,
+    onSubmit: async (values) => {
+      try {
+        await dispatch(signIn({
+          email: values.identifier,
         password: values.password,
-        schoolCode: values.schoolCode,
-        role: 'student',
-      }));
+          role: 'student',
+        })).unwrap();
+      } catch (error) {
+        console.error('Student login failed:', error);
+      }
     },
   });
 
@@ -86,6 +93,10 @@ const StudentLoginPage: React.FC = () => {
     formik.setFieldValue('schoolCode', school?.code || '');
   };
 
+  const toggleLoginMethod = () => {
+    setIsEmailLogin(!isEmailLogin);
+    formik.setFieldValue('identifier', '');
+  };
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard/student');
@@ -97,7 +108,8 @@ const StudentLoginPage: React.FC = () => {
   }, [dispatch]);
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', py: 4 }}>
+    <Fade in timeout={600}>
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', py: 4 }}>
       <Box sx={{ width: '100%', maxWidth: 480, mx: 'auto', px: 2 }}>
         {/* Header */}
         <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -146,6 +158,7 @@ const StudentLoginPage: React.FC = () => {
                 getOptionLabel={(option) => `${option.name} (${option.location})`}
                 value={selectedSchool}
                 onChange={(_, newValue) => handleSchoolSelect(newValue)}
+                loading={loading}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -165,12 +178,24 @@ const StudentLoginPage: React.FC = () => {
                 sx={{ mb: 3 }}
               />
 
+              {/* Login Method Toggle */}
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <Chip
+                  label={isEmailLogin ? 'Switch to Phone Login' : 'Switch to Email Login'}
+                  onClick={toggleLoginMethod}
+                  variant="outlined"
+                  size="small"
+                  icon={isEmailLogin ? <PhoneIcon /> : <Email />}
+                  sx={{ cursor: 'pointer' }}
+                />
+              </Box>
               {/* Student Identifier */}
               <TextField
                 fullWidth
                 id="identifier"
                 name="identifier"
-                label="Email, Username, or Phone Number"
+                label={isEmailLogin ? 'Email Address' : 'Phone Number'}
+                type={isEmailLogin ? 'email' : 'tel'}
                 value={formik.values.identifier}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -179,7 +204,7 @@ const StudentLoginPage: React.FC = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Email color="action" />
+                      {isEmailLogin ? <Email color="action" /> : <PhoneIcon color="action" />}
                     </InputAdornment>
                   ),
                 }}
@@ -206,9 +231,11 @@ const StudentLoginPage: React.FC = () => {
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={handleTogglePasswordVisibility} edge="end">
+                      <Tooltip title={showPassword ? 'Hide password' : 'Show password'}>
+                        <IconButton onClick={handleTogglePasswordVisibility} edge="end">
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
+                      </Tooltip>
                     </InputAdornment>
                   ),
                 }}
@@ -286,6 +313,7 @@ const StudentLoginPage: React.FC = () => {
         </Box>
       </Box>
     </Box>
+    </Fade>
   );
 };
 

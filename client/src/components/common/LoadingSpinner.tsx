@@ -3,25 +3,27 @@ import {
   Box,
   CircularProgress,
   Typography,
-  useTheme,
-  useMediaQuery,
+  Skeleton,
+  Card,
+  CardContent,
 } from '@mui/material';
 import { School as SchoolIcon } from '@mui/icons-material';
-import { animations } from '../../styles/responsive';
 
 interface LoadingSpinnerProps {
   message?: string;
   size?: 'small' | 'medium' | 'large';
   fullScreen?: boolean;
+  variant?: 'spinner' | 'skeleton' | 'pulse';
+  children?: React.ReactNode;
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   message = 'Loading...',
   size = 'medium',
   fullScreen = false,
+  variant = 'spinner',
+  children,
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const sizeMap = {
     small: { spinner: 24, icon: 20, text: '0.875rem' },
@@ -31,6 +33,55 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
   const currentSize = sizeMap[size];
 
+  // Skeleton loading variant
+  if (variant === 'skeleton' && children) {
+    return (
+      <Box sx={{ width: '100%' }}>
+        {children}
+      </Box>
+    );
+  }
+
+  // Pulse loading variant
+  if (variant === 'pulse') {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 2,
+        }}
+      >
+        <Box
+          sx={{
+            width: currentSize.spinner,
+            height: currentSize.spinner,
+            borderRadius: '50%',
+            bgcolor: 'primary.main',
+            opacity: 0.6,
+            animation: 'pulse 1.5s ease-in-out infinite',
+            '@keyframes pulse': {
+              '0%': {
+                transform: 'scale(0.95)',
+                opacity: 0.5,
+              },
+              '50%': {
+                transform: 'scale(1.05)',
+                opacity: 0.8,
+              },
+              '100%': {
+                transform: 'scale(0.95)',
+                opacity: 0.5,
+              },
+            },
+          }}
+        />
+      </Box>
+    );
+  }
+
+  // Default spinner variant
   const content = (
     <Box
       sx={{
@@ -38,9 +89,8 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: { xs: 2, sm: 3 },
+        gap: 2,
         p: { xs: 2, sm: 3 },
-        ...animations.fadeIn,
       }}
     >
       {/* Animated Logo */}
@@ -53,11 +103,10 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         }}
       >
         <CircularProgress
-          size={isMobile ? currentSize.spinner * 0.8 : currentSize.spinner}
+          size={currentSize.spinner}
           thickness={4}
           sx={{
-            color: theme.palette.primary.main,
-            ...animations.pulse,
+            color: 'primary.main',
           }}
         />
         <Box
@@ -72,8 +121,8 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         >
           <SchoolIcon
             sx={{
-              fontSize: isMobile ? currentSize.icon * 0.8 : currentSize.icon,
-              color: theme.palette.primary.main,
+              fontSize: currentSize.icon,
+              color: 'primary.main',
             }}
           />
         </Box>
@@ -85,7 +134,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         color="text.secondary"
         align="center"
         sx={{
-          fontSize: isMobile ? '0.875rem' : currentSize.text,
+          fontSize: currentSize.text,
           fontWeight: 500,
           maxWidth: 300,
           px: 2,
@@ -93,6 +142,35 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       >
         {message}
       </Typography>
+      
+      {/* Loading dots animation */}
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 0.5,
+          '& > div': {
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            bgcolor: 'primary.main',
+            animation: 'loadingDots 1.4s ease-in-out infinite both',
+            '&:nth-of-type(1)': { animationDelay: '-0.32s' },
+            '&:nth-of-type(2)': { animationDelay: '-0.16s' },
+          },
+          '@keyframes loadingDots': {
+            '0%, 80%, 100%': {
+              transform: 'scale(0)',
+            },
+            '40%': {
+              transform: 'scale(1)',
+            },
+          },
+        }}
+      >
+        <div />
+        <div />
+        <div />
+      </Box>
     </Box>
   );
 
@@ -108,7 +186,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: 'rgba(255, 255, 255, 0.9)',
+          bgcolor: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(4px)',
           zIndex: 9999,
         }}
@@ -120,5 +198,36 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
   return content;
 };
+
+// Skeleton loading components
+export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({ 
+  rows = 5, 
+  columns = 4 
+}) => (
+  <Box>
+    {Array.from({ length: rows }).map((_, rowIndex) => (
+      <Box key={rowIndex} sx={{ display: 'flex', gap: 2, mb: 1 }}>
+        {Array.from({ length: columns }).map((_, colIndex) => (
+          <Skeleton
+            key={colIndex}
+            variant="text"
+            width={`${100 / columns}%`}
+            height={40}
+          />
+        ))}
+      </Box>
+    ))}
+  </Box>
+);
+
+export const CardSkeleton: React.FC = () => (
+  <Card>
+    <CardContent>
+      <Skeleton variant="text" width="60%" height={32} sx={{ mb: 1 }} />
+      <Skeleton variant="text" width="40%" height={24} sx={{ mb: 2 }} />
+      <Skeleton variant="rectangular" width="100%" height={120} />
+    </CardContent>
+  </Card>
+);
 
 export default LoadingSpinner;

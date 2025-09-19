@@ -18,6 +18,9 @@ import {
   Divider,
   Badge,
   Tooltip,
+  Alert,
+  Collapse,
+  Button,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -33,11 +36,15 @@ import {
   Logout,
   ChevronLeft,
   Home,
+  Warning as WarningIcon,
+  Wifi as WifiIcon,
+  WifiOff as WifiOffIcon,
 } from '@mui/icons-material';
 import { useNavigate, Outlet } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { logout } from '../../store/slices/authSlice';
-import { responsivePatterns, animations } from '../../styles/responsive';
+import { signOut } from '../../store/slices/supabaseAuthSlice';
+import { useNotifications } from '../../hooks/useRealtime';
+import ErrorBoundary from '../common/ErrorBoundary';
 
 const drawerWidth = 280;
 const mobileDrawerWidth = 260;
@@ -48,6 +55,7 @@ interface NavItem {
   path: string;
   roles?: string[];
   badge?: number;
+  disabled?: boolean;
 }
 
 const ResponsiveDashboard: React.FC = () => {
@@ -57,23 +65,54 @@ const ResponsiveDashboard: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, profile, loading: authLoading } = useAppSelector((state) => state.auth);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showOfflineAlert, setShowOfflineAlert] = useState(false);
+
+  // Real-time notifications
+  const { notifications, unreadCount } = useNotifications(user?.id || '');
+
+  // Network status monitoring
+  React.useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowOfflineAlert(false);
+    };
+    
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowOfflineAlert(true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const navItems: NavItem[] = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { text: 'Schools', icon: <SchoolIcon />, path: '/schools', roles: ['admin', 'super_admin'] },
+    { text: 'Schools', icon: <SchoolIcon />, path: '/schools', roles: ['super_admin', 'school_admin'] },
     { text: 'Students', icon: <PeopleIcon />, path: '/students' },
-    { text: 'Teachers', icon: <PeopleIcon />, path: '/teachers', roles: ['admin', 'school_admin', 'principal'] },
+    { text: 'Teachers', icon: <PeopleIcon />, path: '/teachers', roles: ['super_admin', 'school_admin', 'principal'] },
     { text: 'Classes', icon: <ClassIcon />, path: '/classes' },
-    { text: 'Assignments', icon: <AssignmentIcon />, path: '/assignments', badge: 3 },
+    { text: 'Attendance', icon: <AssignmentIcon />, path: '/attendance' },
     { text: 'Grades', icon: <GradeIcon />, path: '/grades' },
+    { text: 'Fees', icon: <AssignmentIcon />, path: '/fees', roles: ['super_admin', 'school_admin', 'teacher'] },
+    { text: 'Announcements', icon: <NotificationsIcon />, path: '/announcements' },
+    { text: 'Events', icon: <AssignmentIcon />, path: '/events' },
+    { text: 'Messages', icon: <AssignmentIcon />, path: '/messages' },
+    { text: 'Reports', icon: <AssignmentIcon />, path: '/reports', roles: ['super_admin', 'school_admin', 'principal'] },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];
 
   const filteredNavItems = navItems.filter(item => 
-    !item.roles || item.roles.includes(user?.role || '') || item.roles.includes(user?.adminRole || '')
+    !item.roles || item.roles.includes(profile?.role || '') || item.roles.includes(user?.profile?.role || '')
   );
 
   const handleDrawerToggle = () => {
@@ -90,7 +129,7 @@ const ResponsiveDashboard: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await dispatch(logout()).unwrap();
+      await dispatch(signOut()).unwrap();
       navigate('/auth/login');
     } catch (error) {
       console.error('Logout failed:', error);
@@ -105,6 +144,21 @@ const ResponsiveDashboard: React.FC = () => {
     }
   };
 
+  // Show loading state during auth initialization
+  if (authLoading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+        }}
+      >
+        <LoadingSpinner message="Initializing Campus..." size="large" />
+      </Box>
+    );
+  }
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Logo Section */}
@@ -114,13 +168,14 @@ const ResponsiveDashboard: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           gap: 2,
-          borderBottom: `1px solid ${theme.palette.divider}`,
+          borderBottom: 1,
+          borderColor: 'divider',
           minHeight: 64,
         }}
       >
         <Avatar
           sx={{
-            bgcolor: theme.palette.primary.main,
+            bgcolor: 'primary.main',
             width: { xs: 32, sm: 40 },
             height: { xs: 32, sm: 40 },
           }}
@@ -132,7 +187,7 @@ const ResponsiveDashboard: React.FC = () => {
           sx={{
             fontWeight: 700,
             fontSize: { xs: '1rem', sm: '1.25rem' },
-            color: theme.palette.primary.main,
+            color: 'primary.main',
           }}
         >
           Campus
@@ -151,10 +206,11 @@ const ResponsiveDashboard: React.FC = () => {
               borderRadius: 1,
               mb: 0.5,
               minHeight: { xs: 44, sm: 48 },
+              opacity: item.disabled ? 0.5 : 1,
+              pointerEvents: item.disabled ? 'none' : 'auto',
               '&:hover': {
-                bgcolor: theme.palette.action.hover,
+                bgcolor: 'action.hover',
               },
-              ...animations.fadeIn,
             }}
           >
             <ListItemIcon sx={{ minWidth: { xs: 40, sm: 56 } }}>
@@ -178,7 +234,26 @@ const ResponsiveDashboard: React.FC = () => {
       </List>
 
       {/* User Info Section */}
-      <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+      <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+        {/* Network Status */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            mb: 2,
+            p: 1,
+            borderRadius: 1,
+            bgcolor: isOnline ? 'success.light' : 'error.light',
+            color: isOnline ? 'success.contrastText' : 'error.contrastText',
+          }}
+        >
+          {isOnline ? <WifiIcon fontSize="small" /> : <WifiOffIcon fontSize="small" />}
+          <Typography variant="caption" sx={{ fontWeight: 600 }}>
+            {isOnline ? 'Online' : 'Offline'}
+          </Typography>
+        </Box>
+        
         <Box
           sx={{
             display: 'flex',
@@ -186,17 +261,17 @@ const ResponsiveDashboard: React.FC = () => {
             gap: 2,
             p: 1,
             borderRadius: 1,
-            bgcolor: theme.palette.action.hover,
+            bgcolor: 'action.hover',
           }}
         >
           <Avatar
             sx={{
               width: { xs: 32, sm: 40 },
               height: { xs: 32, sm: 40 },
-              bgcolor: theme.palette.secondary.main,
+              bgcolor: 'secondary.main',
             }}
           >
-            {user?.firstName?.[0]}{user?.lastName?.[0]}
+            {profile?.first_name?.[0]}{profile?.last_name?.[0]}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography
@@ -209,7 +284,7 @@ const ResponsiveDashboard: React.FC = () => {
                 whiteSpace: 'nowrap',
               }}
             >
-              {user?.firstName} {user?.lastName}
+              {profile?.first_name} {profile?.last_name}
             </Typography>
             <Typography
               variant="caption"
@@ -219,7 +294,7 @@ const ResponsiveDashboard: React.FC = () => {
                 textTransform: 'capitalize',
               }}
             >
-              {user?.role}
+              {profile?.role}
             </Typography>
           </Box>
         </Box>
@@ -228,7 +303,37 @@ const ResponsiveDashboard: React.FC = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <ErrorBoundary>
+      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+        {/* Offline Alert */}
+        <Collapse in={showOfflineAlert}>
+          <Alert
+            severity="warning"
+            sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 9999,
+              borderRadius: 0,
+            }}
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => setShowOfflineAlert(false)}
+              >
+                Dismiss
+              </Button>
+            }
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <WifiOffIcon />
+              You're currently offline. Some features may be limited.
+            </Box>
+          </Alert>
+        </Collapse>
+
       {/* App Bar */}
       <AppBar
         position="fixed"
@@ -237,8 +342,9 @@ const ResponsiveDashboard: React.FC = () => {
           ml: { md: `${drawerWidth}px` },
           bgcolor: 'background.paper',
           color: 'text.primary',
-          boxShadow: theme.shadows[1],
-          borderBottom: `1px solid ${theme.palette.divider}`,
+          boxShadow: 1,
+          borderBottom: 1,
+          borderColor: 'divider',
         }}
       >
         <Toolbar
@@ -267,13 +373,24 @@ const ResponsiveDashboard: React.FC = () => {
               fontWeight: 600,
             }}
           >
-            Dashboard
+            {profile?.school_id ? `${profile.schools?.name || 'School'} Dashboard` : 'Campus Dashboard'}
           </Typography>
+
+          {/* Network Status Indicator */}
+          <Tooltip title={isOnline ? 'Connected' : 'Offline'}>
+            <IconButton color="inherit" sx={{ mr: 1 }}>
+              {isOnline ? (
+                <WifiIcon color="success" />
+              ) : (
+                <WifiOffIcon color="error" />
+              )}
+            </IconButton>
+          </Tooltip>
 
           {/* Notifications */}
           <Tooltip title="Notifications">
             <IconButton color="inherit" sx={{ mr: 1 }}>
-              <Badge badgeContent={4} color="error">
+              <Badge badgeContent={unreadCount} color="error">
                 <NotificationsIcon />
               </Badge>
             </IconButton>
@@ -290,10 +407,11 @@ const ResponsiveDashboard: React.FC = () => {
                 sx={{
                   width: { xs: 32, sm: 40 },
                   height: { xs: 32, sm: 40 },
-                  bgcolor: theme.palette.primary.main,
+                  bgcolor: 'primary.main',
                 }}
+                src={profile?.avatar_url}
               >
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
+                {profile?.first_name?.[0]}{profile?.last_name?.[0]}
               </Avatar>
             </IconButton>
           </Tooltip>
@@ -318,6 +436,14 @@ const ResponsiveDashboard: React.FC = () => {
           },
         }}
       >
+        <Box sx={{ px: 2, py: 1, borderBottom: 1, borderColor: 'divider' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            {profile?.first_name} {profile?.last_name}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {profile?.email}
+          </Typography>
+        </Box>
         <MenuItem onClick={() => navigate('/profile')}>
           <ListItemIcon>
             <AccountCircle fontSize="small" />
@@ -360,7 +486,6 @@ const ResponsiveDashboard: React.FC = () => {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: mobileDrawerWidth,
-              ...animations.slideInUp,
             },
           }}
         >
@@ -375,7 +500,8 @@ const ResponsiveDashboard: React.FC = () => {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: drawerWidth,
-              borderRight: `1px solid ${theme.palette.divider}`,
+              borderRight: 1,
+              borderColor: 'divider',
             },
           }}
           open
@@ -395,18 +521,31 @@ const ResponsiveDashboard: React.FC = () => {
         }}
       >
         <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }} />
+        
+        {/* Offline Warning */}
+        {!isOnline && (
+          <Alert
+            severity="warning"
+            sx={{ m: 2, mb: 0 }}
+            icon={<WifiOffIcon />}
+          >
+            You're currently offline. Some features may not work properly.
+          </Alert>
+        )}
+        
         <Box
           sx={{
             p: { xs: 2, sm: 3 },
-            ...responsivePatterns.container,
-            maxWidth: 'none',
-            ...animations.fadeIn,
+            maxWidth: '100%',
           }}
         >
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </Box>
       </Box>
     </Box>
+    </ErrorBoundary>
   );
 };
 
