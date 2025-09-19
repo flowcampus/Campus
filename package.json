@@ -2,16 +2,11 @@
   "name": "campus-app",
   "version": "1.0.0",
   "description": "Comprehensive school management system with offline-first capabilities",
-  "main": "server/index.js",
   "scripts": {
-    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
-    "server:dev": "nodemon server/index.js",
-    "client:dev": "cd client && npm start",
+    "dev": "cd client && npm run start",
     "build": "cd client && npm run build",
-    "start": "node server/index.js",
-    "install:all": "npm install && cd client && npm install",
-    "db:migrate": "node server/scripts/migrate.js",
-    "db:seed": "node server/scripts/seed.js"
+    "start": "cd client && npm run start",
+    "install": "cd client && npm install"
   },
   "dependencies": {
     "express": "^4.18.2",
